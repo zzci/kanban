@@ -50,3 +50,8 @@
 
 ## Tasks
 
+- [x] **UI-001 Create project dashboard as default page** `P1`
+  - description: Replace the health-check HomePage with a project dashboard that displays all projects as cards with issue/status counts. Change `/` route to show dashboard instead of redirecting to `/projects/default`.
+  - activeForm: Creating project dashboard
+  - createdAt: 2026-02-22 23:00
+

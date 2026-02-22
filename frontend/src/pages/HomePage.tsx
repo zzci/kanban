@@ -1,15 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import {
-  Activity,
-  Database,
-  Monitor,
-  MoonStar,
-  RefreshCw,
-  Router,
-  Sun,
-} from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { useNavigate } from 'react-router-dom'
+import { FolderKanban, FolderOpen, Plus, Hash, Layers } from 'lucide-react'
+import { useProjects, useCreateProject } from '@/hooks/use-kanban'
+import { useProjectStats } from '@/hooks/use-project-stats'
+import type { Project } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -18,213 +11,310 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogCloseButton,
+} from '@/components/ui/dialog'
+import { useState, useCallback } from 'react'
 
-type HealthResponse = {
-  status: string
-  db: 'ok' | 'error'
-  timestamp: string
+const PROJECT_COLORS = [
+  'bg-blue-600',
+  'bg-violet-600',
+  'bg-emerald-600',
+  'bg-amber-600',
+  'bg-rose-600',
+  'bg-cyan-600',
+  'bg-pink-600',
+  'bg-teal-600',
+]
+
+function getProjectColor(index: number): string {
+  return PROJECT_COLORS[index % PROJECT_COLORS.length] ?? PROJECT_COLORS[0]
 }
 
-type Theme = 'dark' | 'light'
-type ThemeMode = Theme | 'system'
-
-const THEME_KEY = 'ui-theme-mode'
-
-function getSystemTheme(): Theme {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
-}
-
-function getInitialThemeMode(): ThemeMode {
-  if (typeof window === 'undefined') {
-    return 'system'
+function getProjectInitials(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed) return '??'
+  const words = trimmed.split(/\s+/)
+  if (words.length >= 2) {
+    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
   }
-  const saved = window.localStorage.getItem(THEME_KEY)
-  if (saved === 'dark' || saved === 'light' || saved === 'system') {
-    return saved
+  return trimmed.slice(0, 2).toUpperCase()
+}
+
+function derivePrefix(name: string): string {
+  const words = name.trim().split(/\s+/)
+  if (words.length >= 2) {
+    return words
+      .slice(0, 3)
+      .map((w) => w.charAt(0))
+      .join('')
+      .toUpperCase()
   }
-  return 'system'
+  return name.trim().slice(0, 3).toUpperCase()
 }
 
-function resolveTheme(mode: ThemeMode): Theme {
-  return mode === 'system' ? getSystemTheme() : mode
-}
-
-function applyTheme(mode: ThemeMode) {
-  const resolvedTheme = resolveTheme(mode)
-  document.documentElement.classList.toggle('dark', resolvedTheme === 'dark')
-  window.localStorage.setItem(THEME_KEY, mode)
-}
-
-async function fetchApiHealth(): Promise<HealthResponse> {
-  const response = await fetch('/api/health')
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`)
-  }
-  return response.json()
-}
-
-export default function HomePage() {
-  const [polling, setPolling] = useState(true)
-  const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
-
-  const healthQuery = useQuery({
-    queryKey: ['api-health'],
-    queryFn: fetchApiHealth,
-    refetchInterval: polling ? 5000 : false,
-  })
-
-  const updatedAt = useMemo(() => {
-    if (!healthQuery.data?.timestamp) {
-      return '--'
-    }
-    return new Date(healthQuery.data.timestamp).toLocaleString()
-  }, [healthQuery.data?.timestamp])
-
-  const statusBadge = useMemo(() => {
-    if (healthQuery.isPending) {
-      return <Badge variant="secondary">Loading</Badge>
-    }
-    if (healthQuery.isError) {
-      return <Badge variant="destructive">Error</Badge>
-    }
-    return (
-      <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
-        Healthy
-      </Badge>
-    )
-  }, [healthQuery.isError, healthQuery.isPending])
-
-  useEffect(() => {
-    applyTheme(themeMode)
-
-    if (themeMode !== 'system') {
-      return
-    }
-
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = () => applyTheme('system')
-    media.addEventListener('change', handleChange)
-    return () => media.removeEventListener('change', handleChange)
-  }, [themeMode])
+function ProjectCard({
+  project,
+  colorClass,
+  onClick,
+}: {
+  project: Project
+  colorClass: string
+  onClick: () => void
+}) {
+  const stats = useProjectStats(project.id)
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto max-w-5xl px-6 py-16">
-        <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-primary/15 p-2 text-primary">
-              <Router className="h-5 w-5" />
-            </span>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              React Router + TanStack Query Demo
-            </h1>
+    <Card
+      className="bg-card/70 hover:bg-card cursor-pointer transition-all hover:shadow-md hover:border-primary/20 group"
+      onClick={onClick}
+    >
+      <CardHeader>
+        <div className="flex items-start gap-3">
+          <div
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white ${colorClass}`}
+          >
+            {getProjectInitials(project.name)}
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant={themeMode === 'light' ? 'default' : 'secondary'}
-              onClick={() => setThemeMode('light')}
-            >
-              <Sun className="h-4 w-4" />
-              Light
-            </Button>
-            <Button
-              type="button"
-              variant={themeMode === 'dark' ? 'default' : 'secondary'}
-              onClick={() => setThemeMode('dark')}
-            >
-              <MoonStar className="h-4 w-4" />
-              Dark
-            </Button>
-            <Button
-              type="button"
-              variant={themeMode === 'system' ? 'default' : 'secondary'}
-              onClick={() => setThemeMode('system')}
-            >
-              <Monitor className="h-4 w-4" />
-              System
-            </Button>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base group-hover:text-primary transition-colors truncate">
+              {project.name}
+            </CardTitle>
+            <CardDescription className="mt-1">
+              <Badge variant="secondary" className="text-[10px] font-mono">
+                {project.prefix}
+              </Badge>
+            </CardDescription>
           </div>
         </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Hash className="h-3 w-3" />
+            {stats.issueCount} issues
+          </span>
+          <span className="flex items-center gap-1">
+            <Layers className="h-3 w-3" />
+            {stats.statusCount} statuses
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-card/70">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-emerald-500" />
-                  <CardTitle>API Health</CardTitle>
-                </div>
-                {statusBadge}
-              </div>
-              <CardDescription>
-                Live endpoint check through TanStack Query.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <p>
-                <span className="text-muted-foreground">Endpoint:</span>{' '}
-                <code className="rounded bg-muted px-2 py-1">/api/health</code>
-              </p>
-              <p>
-                <span className="text-muted-foreground">Updated:</span>{' '}
-                {updatedAt}
-              </p>
-              {healthQuery.isError && (
-                <p className="text-destructive">{healthQuery.error.message}</p>
-              )}
+function CreateProjectDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onCreated: (p: Project) => void
+}) {
+  const [name, setName] = useState('')
+  const [prefix, setPrefix] = useState('')
+  const createProject = useCreateProject()
+
+  const reset = () => {
+    setName('')
+    setPrefix('')
+  }
+
+  const handleNameChange = (value: string) => {
+    setName(value)
+    if (!prefix || prefix === derivePrefix(name)) {
+      setPrefix(derivePrefix(value))
+    }
+  }
+
+  const handleSubmit = () => {
+    const trimmedName = name.trim()
+    const trimmedPrefix = prefix.trim().toUpperCase()
+    if (!trimmedName || !trimmedPrefix) return
+    createProject.mutate(
+      { name: trimmedName, prefix: trimmedPrefix },
+      {
+        onSuccess: (project) => {
+          onCreated(project)
+          onOpenChange(false)
+          reset()
+        },
+      },
+    )
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v)
+        if (!v) reset()
+      }}
+    >
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div>
+            <DialogTitle>Create Project</DialogTitle>
+            <DialogDescription className="mt-1">
+              Select or create a repository for your project
+            </DialogDescription>
+          </div>
+          <DialogCloseButton />
+        </DialogHeader>
+        <div className="space-y-5 px-5 pb-5 pt-2">
+          {/* Project Name */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-foreground">
+              Repository Name <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="my-project"
+              autoFocus
+              className="w-full rounded-md border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground">
+              This will be the folder name for your new repository
+            </p>
+          </div>
+
+          {/* Parent Directory */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-foreground">
+              Parent Directory
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+                onKeyDown={handleKeyDown}
+                placeholder="Current Directory"
+                maxLength={5}
+                className="flex-1 rounded-md border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => healthQuery.refetch()}
-                className="mt-2"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                tabIndex={-1}
               >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
+                <FolderOpen className="h-4 w-4" />
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Leave empty to use your current working directory
+            </p>
+          </div>
 
-          <Card className="bg-card/70">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-cyan-500" />
-                <CardTitle>Query Controls</CardTitle>
-              </div>
-              <CardDescription>
-                Toggle background polling and inspect cache in devtools.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <label className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <span>Auto refresh (5s)</span>
-                <input
-                  type="checkbox"
-                  checked={polling}
-                  onChange={(e) => setPolling(e.target.checked)}
-                  className="h-4 w-4 accent-primary"
-                />
-              </label>
-
-              <p className="text-muted-foreground">
-                Open React Query Devtools in the bottom-right corner during
-                development.
-              </p>
-
-              <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-                {`queryKey: ['api-health']
-refetchInterval: ${polling ? '5000' : 'false'}
-source: fetch('/api/health')
-themeMode: ${themeMode}
-resolvedTheme: ${resolveTheme(themeMode)}`}
-              </pre>
-            </CardContent>
-          </Card>
+          {/* Submit */}
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={handleSubmit}
+            disabled={createProject.isPending || !name.trim() || !prefix.trim()}
+          >
+            {createProject.isPending ? 'Creating...' : 'Create Repository'}
+          </Button>
         </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export default function HomePage() {
+  const navigate = useNavigate()
+  const { data: projects, isLoading } = useProjects()
+  const [showCreate, setShowCreate] = useState(false)
+
+  const handleProjectCreated = useCallback(
+    (project: Project) => {
+      navigate(`/projects/${project.id}`)
+    },
+    [navigate],
+  )
+
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <div className="mb-8 flex items-center gap-3">
+          <span className="rounded-xl bg-primary/15 p-2 text-primary">
+            <FolderKanban className="h-5 w-5" />
+          </span>
+          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+          {projects ? (
+            <Badge variant="secondary" className="ml-1">
+              {projects.length}
+            </Badge>
+          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus className="h-4 w-4" />
+            New Project
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className="bg-card/30 animate-pulse min-h-[140px]">
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-muted" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-24 rounded bg-muted" />
+                      <div className="h-4 w-12 rounded bg-muted" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-3 w-32 rounded bg-muted" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {projects?.map((project, index) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                colorClass={getProjectColor(index)}
+                onClick={() => navigate(`/projects/${project.id}`)}
+              />
+            ))}
+          </div>
+        )}
       </section>
+
+      <CreateProjectDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onCreated={handleProjectCreated}
+      />
     </main>
   )
 }

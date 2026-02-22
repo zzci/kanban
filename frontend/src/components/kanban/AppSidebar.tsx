@@ -228,13 +228,14 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
 
   return (
     <div className="flex flex-col items-center h-full w-14 py-3 gap-1 bg-card border-r border-border shrink-0">
-      {/* Board icon */}
+      {/* Home */}
       <Button
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Board view"
-        title="Board view"
+        aria-label="Home"
+        title="Home"
+        onClick={() => navigate('/')}
       >
         <LayoutGrid className="h-4.5 w-4.5" />
       </Button>

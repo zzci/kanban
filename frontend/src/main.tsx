@@ -17,10 +17,7 @@ if (!rootElement.innerHTML) {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route
-            path="/"
-            element={<Navigate to="/projects/default" replace />}
-          />
+          <Route path="/" element={<HomePage />} />
           <Route path="/projects/:projectId" element={<KanbanPage />} />
           <Route
             path="/projects/:projectId/issues"
@@ -30,7 +27,6 @@ if (!rootElement.innerHTML) {
             path="/projects/:projectId/issues/:issueId"
             element={<IssueDetailPage />}
           />
-          <Route path="/dashboard" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
