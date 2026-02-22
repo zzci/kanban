@@ -78,7 +78,7 @@ export function IssueListPanel({
 
       {/* Search */}
       <div className="px-3 py-2">
-        <div className="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-1.5">
+        <div className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-1.5">
           <Search className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
           <input
             type="text"
@@ -149,12 +149,6 @@ function StatusGroup({
       {/* Column sub-header */}
       {!isCollapsed ? (
         <>
-          <div className="flex items-center px-3.5 py-1 border-b border-border/40">
-            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">
-              Name
-            </span>
-          </div>
-
           {/* Issue rows */}
           {issues.map((issue) => {
             const isActive = issue.id === activeIssueId

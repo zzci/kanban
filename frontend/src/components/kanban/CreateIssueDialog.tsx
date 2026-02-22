@@ -15,6 +15,8 @@ import type { Priority, Status } from '@/types/kanban'
 import { useCreateIssue, useStatuses } from '@/hooks/use-kanban'
 import { usePanelStore } from '@/stores/panel-store'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { FilePreviewDialog } from '@/components/FilePreviewDialog'
+import { fileContentHash } from '@/lib/file-hash'
 import { PriorityIcon } from './PriorityIcon'
 
 // ── Data ──────────────────────────────────────────────
@@ -155,6 +157,7 @@ export function CreateIssueForm({
   const [permission, setPermission] = useState<PermissionId>('auto')
   const [agent, setAgent] = useState<AgentId>('default')
   const [files, setFiles] = useState<File[]>([])
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
 
   useEffect(() => {
     setStatusId(initialStatusId ?? firstStatusId)
@@ -202,19 +205,61 @@ export function CreateIssueForm({
     [],
   )
 
+  const addFiles = useCallback((incoming: File[]) => {
+    setFiles((prev) => {
+      const seen = new Set(prev.map((f) => `${f.name}|${f.size}`))
+      const unique: File[] = []
+      for (const f of incoming) {
+        const key = `${f.name}|${f.size}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          unique.push(f)
+        }
+      }
+      return unique.length > 0 ? [...prev, ...unique] : prev
+    })
+  }, [])
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        setFiles((prev) => [...prev, ...Array.from(e.target.files!)])
+      const newFiles = e.target.files ? Array.from(e.target.files) : []
+      if (newFiles.length > 0) {
+        addFiles(newFiles)
       }
       e.target.value = ''
     },
-    [],
+    [addFiles],
   )
 
   const removeFile = useCallback((index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }, [])
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      const rawFiles: File[] = []
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (file) rawFiles.push(file)
+        }
+      }
+      if (rawFiles.length === 0) return
+      e.preventDefault()
+      void Promise.all(
+        rawFiles.map(async (file) => {
+          const hasName = file.name && !file.name.startsWith('image')
+          if (hasName) return file
+          const hash = await fileContentHash(file)
+          const ext = (file.type.split('/')[1] ?? 'bin').replace('+xml', '')
+          return new File([file], `paste-${hash}.${ext}`, { type: file.type })
+        }),
+      ).then(addFiles)
+    },
+    [addFiles],
+  )
 
   return (
     <div onKeyDown={handleKeyDown}>
@@ -225,6 +270,7 @@ export function CreateIssueForm({
             ref={textareaRef}
             value={input}
             onChange={handleTextarea}
+            onPaste={handlePaste}
             placeholder="描述你想做的工作..."
             rows={4}
             className="w-full bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground/50 px-3 pt-3 pb-2 min-h-[100px]"
@@ -255,11 +301,11 @@ export function CreateIssueForm({
           <PropertyRow label="优先级">
             <PrioritySelect value={priority} onChange={setPriority} />
           </PropertyRow>
-          <PropertyRow label="Agent">
-            <AgentSelect value={agent} onChange={setAgent} />
-          </PropertyRow>
           <PropertyRow label="模型">
             <ModelSelect value={model} onChange={setModel} />
+          </PropertyRow>
+          <PropertyRow label="Agent">
+            <AgentSelect value={agent} onChange={setAgent} />
           </PropertyRow>
         </div>
       </div>
@@ -281,8 +327,11 @@ export function CreateIssueForm({
               {files.map((file, i) => (
                 <div
                   key={`${file.name}-${i}`}
-                  className="flex items-center gap-2 rounded-md bg-background border px-2.5 py-1.5"
-                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-2 rounded-md bg-background border px-2.5 py-1.5 cursor-pointer hover:bg-accent/40 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPreviewFile(file)
+                  }}
                 >
                   {fileIcon(file.name)}
                   <span className="text-xs truncate flex-1">{file.name}</span>
@@ -291,7 +340,10 @@ export function CreateIssueForm({
                   </span>
                   <button
                     type="button"
-                    onClick={() => removeFile(i)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeFile(i)
+                    }}
                     className="p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
                   >
                     <X className="h-3 w-3" />
@@ -339,6 +391,14 @@ export function CreateIssueForm({
           </button>
         </div>
       </div>
+
+      <FilePreviewDialog
+        file={previewFile}
+        open={previewFile !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFile(null)
+        }}
+      />
     </div>
   )
 }
@@ -360,6 +420,8 @@ export function CreateIssueDialog() {
       <DialogContent
         className="flex flex-col gap-0 p-0 max-w-[580px] rounded-xl overflow-visible top-[36%]"
         aria-describedby={undefined}
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Create Issue</DialogTitle>
 

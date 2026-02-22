@@ -1,10 +1,11 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { LayoutGrid, Plus, Settings } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { Project } from '@/types/kanban'
-import { useProjects, useCreateProject } from '@/hooks/use-kanban'
+import { useProjects } from '@/hooks/use-kanban'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 
 function getProjectInitials(name: string): string {
   const trimmed = name.trim()
@@ -29,18 +30,6 @@ const PROJECT_COLORS = [
 
 function getProjectColor(index: number): string {
   return PROJECT_COLORS[index % PROJECT_COLORS.length] ?? PROJECT_COLORS[0]
-}
-
-function derivePrefix(name: string): string {
-  const words = name.trim().split(/\s+/)
-  if (words.length >= 2) {
-    return words
-      .slice(0, 3)
-      .map((w) => w.charAt(0))
-      .join('')
-      .toUpperCase()
-  }
-  return name.trim().slice(0, 3).toUpperCase()
 }
 
 function ProjectButton({
@@ -94,111 +83,6 @@ function ProjectButton({
         </div>
       ) : null}
     </>
-  )
-}
-
-function CreateProjectPopover({
-  onCreated,
-  onClose,
-}: {
-  onCreated: (project: Project) => void
-  onClose: () => void
-}) {
-  const [name, setName] = useState('')
-  const [prefix, setPrefix] = useState('')
-  const createProject = useCreateProject()
-  const popoverRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node)
-      ) {
-        onClose()
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose])
-
-  const handleNameChange = (value: string) => {
-    setName(value)
-    if (!prefix || prefix === derivePrefix(name)) {
-      setPrefix(derivePrefix(value))
-    }
-  }
-
-  const handleSubmit = useCallback(() => {
-    const trimmedName = name.trim()
-    const trimmedPrefix = prefix.trim().toUpperCase()
-    if (!trimmedName || !trimmedPrefix) return
-    createProject.mutate(
-      { name: trimmedName, prefix: trimmedPrefix },
-      { onSuccess: (project) => onCreated(project) },
-    )
-  }, [name, prefix, createProject, onCreated])
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleSubmit()
-    }
-    if (e.key === 'Escape') {
-      onClose()
-    }
-  }
-
-  return (
-    <div
-      ref={popoverRef}
-      className="absolute left-full top-0 ml-2 z-50 w-56 rounded-lg border bg-popover p-3 shadow-lg"
-    >
-      <p className="text-sm font-medium mb-2">New Project</p>
-      <div className="space-y-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={name}
-          onChange={(e) => handleNameChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Project name"
-          className="w-full rounded-md border bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          type="text"
-          value={prefix}
-          onChange={(e) => setPrefix(e.target.value.toUpperCase())}
-          onKeyDown={handleKeyDown}
-          placeholder="Prefix (e.g. PRJ)"
-          maxLength={5}
-          className="w-full rounded-md border bg-background px-2.5 py-1.5 text-sm uppercase outline-none focus:ring-2 focus:ring-ring"
-        />
-        <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={createProject.isPending || !name.trim() || !prefix.trim()}
-            className="flex-1 text-xs"
-          >
-            {createProject.isPending ? 'Creating...' : 'Create'}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-xs"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -259,24 +143,21 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
       </div>
 
       {/* Create project */}
-      <div className="relative">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowCreate(true)}
-          className="h-9 w-9 text-muted-foreground"
-          aria-label="Create project"
-          title="Create project"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-        {showCreate ? (
-          <CreateProjectPopover
-            onCreated={handleProjectCreated}
-            onClose={() => setShowCreate(false)}
-          />
-        ) : null}
-      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowCreate(true)}
+        className="h-9 w-9 text-muted-foreground"
+        aria-label="Create project"
+        title="Create project"
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+      <CreateProjectDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onCreated={handleProjectCreated}
+      />
 
       {/* Bottom section */}
       <div className="mt-auto flex flex-col items-center gap-1">

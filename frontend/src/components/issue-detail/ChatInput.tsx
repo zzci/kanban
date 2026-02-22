@@ -3,12 +3,17 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronsRight,
+  FileText,
+  ImageIcon,
   ListTree,
   MousePointerClick,
   Paperclip,
   SlidersHorizontal,
   Sparkles,
+  X,
 } from 'lucide-react'
+import { FilePreviewDialog } from '@/components/FilePreviewDialog'
+import { fileContentHash } from '@/lib/file-hash'
 
 const MODELS = [
   { id: 'opus', label: 'Opus', description: 'Most capable' },
@@ -185,7 +190,10 @@ export function ChatInput({
   const [permission, setPermission] = useState<PermissionId>('auto')
   const [mode, setMode] = useState<ModeId>('default')
   const [input, setInput] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -196,6 +204,62 @@ export function ChatInput({
     },
     [],
   )
+
+  const addFiles = useCallback((incoming: File[]) => {
+    setFiles((prev) => {
+      const seen = new Set(prev.map((f) => `${f.name}|${f.size}`))
+      const unique: File[] = []
+      for (const f of incoming) {
+        const key = `${f.name}|${f.size}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          unique.push(f)
+        }
+      }
+      return unique.length > 0 ? [...prev, ...unique] : prev
+    })
+  }, [])
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      const rawFiles: File[] = []
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (file) rawFiles.push(file)
+        }
+      }
+      if (rawFiles.length === 0) return
+      e.preventDefault()
+      void Promise.all(
+        rawFiles.map(async (file) => {
+          const hasName = file.name && !file.name.startsWith('image')
+          if (hasName) return file
+          const hash = await fileContentHash(file)
+          const ext = (file.type.split('/')[1] ?? 'bin').replace('+xml', '')
+          return new File([file], `paste-${hash}.${ext}`, { type: file.type })
+        }),
+      ).then(addFiles)
+    },
+    [addFiles],
+  )
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newFiles = e.target.files ? Array.from(e.target.files) : []
+      if (newFiles.length > 0) {
+        addFiles(newFiles)
+      }
+      e.target.value = ''
+    },
+    [addFiles],
+  )
+
+  const removeFile = useCallback((index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }, [])
 
   return (
     <div className="shrink-0 px-3 pb-3 pt-1">
@@ -237,11 +301,59 @@ export function ChatInput({
             ref={textareaRef}
             value={input}
             onChange={handleInput}
+            onPaste={handlePaste}
             placeholder="Continue working on this task..."
             rows={1}
             className="w-full bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground/50 min-h-[24px]"
           />
         </div>
+
+        {/* File list */}
+        {files.length > 0 ? (
+          <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+            {files.map((file, i) => (
+              <div
+                key={`${file.name}-${i}`}
+                className="flex items-center gap-1.5 rounded-md bg-muted/50 border border-border/40 px-2 py-1 text-xs max-w-[200px] cursor-pointer hover:bg-muted transition-colors"
+                onClick={() => setPreviewFile(file)}
+              >
+                {file.type.startsWith('image/') ? (
+                  <ImageIcon className="h-3 w-3 text-blue-400 shrink-0" />
+                ) : (
+                  <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                )}
+                <span className="truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeFile(i)
+                  }}
+                  className="p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <FilePreviewDialog
+          file={previewFile}
+          open={previewFile !== null}
+          onOpenChange={(open) => {
+            if (!open) setPreviewFile(null)
+          }}
+        />
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileChange}
+        />
 
         {/* Toolbar */}
         <div className="flex items-center justify-between px-2.5 pb-2 pt-0.5">
@@ -266,9 +378,14 @@ export function ChatInput({
               renderLabel={(v) => MODES.find((m) => m.id === v)?.label ?? v}
             />
 
-            <ToolbarIcon title="Attach file">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              title="Attach file"
+            >
               <Paperclip className="h-3.5 w-3.5" />
-            </ToolbarIcon>
+            </button>
           </div>
 
           <button

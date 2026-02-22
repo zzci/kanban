@@ -76,7 +76,7 @@ export default function IssueDetailPage() {
         />
       ) : (
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-[580px] rounded-xl border bg-card shadow-sm">
+          <div className="w-full max-w-[580px] rounded-xl">
             <div className="px-5 pt-4 pb-2">
               <h2 className="text-sm font-semibold text-foreground">
                 创建任务
