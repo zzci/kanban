@@ -1,9 +1,8 @@
-import { useRef, useEffect, useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Play, Link } from 'lucide-react'
-import { useIssue } from '@/hooks/use-kanban'
-import { generateMockChat } from '@/lib/mock-chat'
-import { ChatMessageItem } from './ChatMessage'
+import { useIssue, useStatuses } from '@/hooks/use-kanban'
+import { IssueDetail } from './IssueDetail'
 import { ChatInput } from './ChatInput'
 import { DiffPanel } from './DiffPanel'
 import { ReviewDialog } from './ReviewDialog'
@@ -28,29 +27,9 @@ export function ChatArea({
 }) {
   const navigate = useNavigate()
   const { data: issue, isLoading, isError } = useIssue(projectId, issueId)
+  const { data: statuses } = useStatuses(projectId)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showReview, setShowReview] = useState(false)
-
-  const messages = useMemo(
-    () =>
-      issue
-        ? generateMockChat({
-            id: issue.id,
-            displayId: issue.displayId,
-            title: issue.title,
-            description: issue.description,
-            priority: issue.priority,
-            createdAt: issue.createdAt,
-          })
-        : [],
-    [issue],
-  )
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages])
 
   if (isLoading) {
     return (
@@ -127,11 +106,12 @@ export function ChatArea({
           </Button>
         </div>
 
-        {/* Messages */}
+        {/* Issue detail + messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto py-2">
-          {messages.map((msg) => (
-            <ChatMessageItem key={msg.id} message={msg} />
-          ))}
+          <IssueDetail
+            issue={issue}
+            status={statuses?.find((s) => s.id === issue.statusId)}
+          />
         </div>
 
         {/* Input */}
