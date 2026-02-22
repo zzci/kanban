@@ -1,0 +1,37 @@
+{
+  "name": "kanban",
+  "module": "app/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --cwd frontend dev",
+    "dev:api": "bun app/index.ts",
+    "build": "bun run --cwd frontend build",
+    "build:prod": "bun run build",
+    "start": "NODE_ENV=production bun app/index.ts",
+    "preview": "bun run --cwd frontend preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:reset": "bun app/db/reset.ts"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^7.4.3",
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.9",
+    "eslint": "^10.0.1",
+    "prettier": "^3.8.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.1",
+    "ulid": "^3.0.2",
+    "winston": "^3.19.0"
+  }
+}

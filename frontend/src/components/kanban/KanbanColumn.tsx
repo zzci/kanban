@@ -1,0 +1,88 @@
+import { useDroppable } from '@dnd-kit/react'
+import { CollisionPriority } from '@dnd-kit/abstract'
+import { Plus } from 'lucide-react'
+import type { Issue, Status, Tag } from '@/types/kanban'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { usePanelStore } from '@/stores/panel-store'
+import { KanbanCard } from './KanbanCard'
+
+export function KanbanColumn({
+  status,
+  issues,
+  selectedIssueId,
+}: {
+  status: Status
+  issues: (Issue & { tags?: Tag[] })[]
+  selectedIssueId?: string | null
+}) {
+  const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
+
+  const { ref, isDropTarget } = useDroppable({
+    id: status.id,
+    collisionPriority: CollisionPriority.Normal,
+  })
+
+  const sorted = [...issues].sort((a, b) => a.sortOrder - b.sortOrder)
+
+  const issueTagMap = new Map<string, Tag[]>()
+  for (const issue of sorted) {
+    issueTagMap.set(issue.id, issue.tags ?? [])
+  }
+
+  return (
+    <div
+      className={`flex h-full min-w-[260px] flex-1 flex-col rounded-lg border bg-muted/40 ${
+        isDropTarget ? 'ring-2 ring-primary/20' : ''
+      }`}
+    >
+      {/* Column header */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <span
+          className="h-2.5 w-2.5 rounded-full shrink-0"
+          style={{ backgroundColor: status.color }}
+        />
+        <span className="text-sm font-medium text-foreground">
+          {status.name}
+        </span>
+        <Badge
+          variant="secondary"
+          className="h-5 min-w-5 px-1.5 text-[10px] font-medium"
+        >
+          {sorted.length}
+        </Badge>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-auto h-6 w-6 text-muted-foreground"
+          onClick={() => openCreateDialog(status.id)}
+          aria-label={`Create issue in ${status.name}`}
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      <Separator />
+
+      {/* Cards */}
+      <div
+        ref={ref}
+        className="flex flex-1 flex-col gap-1.5 overflow-y-auto p-1.5"
+      >
+        {sorted.map((issue, index) => (
+          <KanbanCard
+            key={issue.id}
+            issue={issue}
+            tags={issueTagMap.get(issue.id) ?? []}
+            index={index}
+            columnStatusId={status.id}
+            isSelected={selectedIssueId === issue.id}
+          />
+        ))}
+        {/* Spacer extends the droppable zone to the bottom of the column */}
+        <div className="min-h-[40px] flex-grow" />
+      </div>
+    </div>
+  )
+}
