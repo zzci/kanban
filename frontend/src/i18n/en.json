@@ -162,6 +162,10 @@
     "type": "Type"
   },
   "theme": {
+    "switchTheme": "Switch theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
   },
