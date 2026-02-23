@@ -5,9 +5,18 @@ type PanelState =
   | { kind: 'closed' }
   | { kind: 'view'; issue: Issue & { tags?: Tag[] } }
 
-const DEFAULT_WIDTH = 420
 const MIN_WIDTH = 360
-const MAX_WIDTH_RATIO = 0.5 // 50vw
+const DEFAULT_WIDTH_RATIO = 0.4
+const MAX_WIDTH_RATIO = 0.6
+
+function getViewportWidth(): number {
+  return typeof window === 'undefined' ? 800 : window.innerWidth
+}
+
+function clampWidth(w: number): number {
+  const maxW = getViewportWidth() * MAX_WIDTH_RATIO
+  return Math.max(MIN_WIDTH, Math.min(w, maxW))
+}
 
 interface PanelStore {
   panel: PanelState
@@ -27,16 +36,14 @@ interface PanelStore {
   closeCreateDialog: () => void
 }
 
-function clampWidth(w: number): number {
-  const maxW = window.innerWidth * MAX_WIDTH_RATIO
-  return Math.max(MIN_WIDTH, Math.min(w, maxW))
-}
+export { MIN_WIDTH as PANEL_MIN_WIDTH }
+export const PANEL_MAX_WIDTH_RATIO = MAX_WIDTH_RATIO
 
 export const usePanelStore = create<PanelStore>((set) => ({
   panel: { kind: 'closed' },
   selectedIssueId: null,
   isPanelOpen: false,
-  width: DEFAULT_WIDTH,
+  width: Math.round(getViewportWidth() * DEFAULT_WIDTH_RATIO),
 
   createDialogOpen: false,
   createDialogStatusId: undefined,
@@ -63,3 +70,14 @@ export const usePanelStore = create<PanelStore>((set) => ({
   closeCreateDialog: () =>
     set({ createDialogOpen: false, createDialogStatusId: undefined }),
 }))
+
+// Re-clamp width on window resize
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => {
+    const store = usePanelStore.getState()
+    const clamped = clampWidth(store.width)
+    if (clamped !== store.width) {
+      store.setWidth(clamped)
+    }
+  })
+}

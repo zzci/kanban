@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { X, ChevronDown, Container, SlidersHorizontal } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const AGENTS = [
   { id: 'claude_code', label: 'CLAUDE_CODE' },
@@ -77,6 +78,7 @@ function SelectDropdown<T extends string>({
 }
 
 export function ReviewDialog({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation()
   const [instructions, setInstructions] = useState('')
   const [includeGit, setIncludeGit] = useState(true)
   const [newSession, setNewSession] = useState(false)
@@ -112,9 +114,9 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-2">
           <div>
-            <h2 className="text-lg font-semibold">开始审查</h2>
+            <h2 className="text-lg font-semibold">{t('review.startReview')}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              请求编码代理审查您的更改并提供反馈。
+              {t('review.reviewDescription')}
             </p>
           </div>
           <button
@@ -130,11 +132,11 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
         <div className="px-6 py-4 space-y-5">
           {/* Instructions textarea */}
           <div>
-            <label className="text-sm font-medium">附加说明（可选）</label>
+            <label className="text-sm font-medium">{t('review.additionalNotes')}</label>
             <textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              placeholder="Add any specific instructions for the review..."
+              placeholder={t('review.instructionsPlaceholder')}
               rows={4}
               className="mt-2 w-full rounded-md border bg-background px-3 py-2.5 text-sm resize-none outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/50"
             />
@@ -174,9 +176,9 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
               </div>
             </div>
             <div>
-              <span className="text-sm font-medium">包含 Git 上下文</span>
+              <span className="text-sm font-medium">{t('review.includeGitContext')}</span>
               <p className="text-xs text-muted-foreground mt-0.5">
-                告诉代理如何查看此分支上的所有更改
+                {t('review.includeGitDescription')}
               </p>
             </div>
           </label>
@@ -205,7 +207,7 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="rounded-md border px-4 py-1.5 text-sm font-medium hover:bg-accent transition-colors"
           >
-            取消
+            {t('common.cancel')}
           </button>
 
           <div className="flex items-center gap-4">
@@ -224,14 +226,14 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
                   }`}
                 />
               </button>
-              <span className="text-sm">新会话</span>
+              <span className="text-sm">{t('review.newSession')}</span>
             </label>
 
             <button
               type="button"
               className="rounded-md border-2 border-foreground bg-background px-4 py-1.5 text-sm font-semibold hover:bg-accent transition-colors"
             >
-              开始审查
+              {t('review.startReview')}
             </button>
           </div>
         </div>

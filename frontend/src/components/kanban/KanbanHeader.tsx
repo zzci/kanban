@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Search, Settings, SlidersHorizontal } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Project } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -15,6 +16,7 @@ export function KanbanHeader({
   issueCount: number
   defaultStatusId?: string
 }) {
+  const { t } = useTranslation()
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
   const [showSettings, setShowSettings] = useState(false)
 
@@ -30,13 +32,13 @@ export function KanbanHeader({
             type="button"
             onClick={() => setShowSettings(true)}
             className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.07] transition-colors"
-            aria-label="Project settings"
-            title="Project settings"
+            aria-label={t('project.settings')}
+            title={t('project.settings')}
           >
             <Settings className="h-3.5 w-3.5" />
           </button>
           <span className="text-xs text-muted-foreground tabular-nums">
-            {issueCount} issues
+            {t('project.issueCount', { count: issueCount })}
           </span>
         </div>
 
@@ -46,7 +48,7 @@ export function KanbanHeader({
             <Search className="h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t('common.search')}
               className="w-28 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
             />
           </div>
@@ -58,7 +60,7 @@ export function KanbanHeader({
             className="h-8 gap-1.5 text-xs text-muted-foreground"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filter
+            {t('kanban.filter')}
           </Button>
 
           <Separator orientation="vertical" className="h-5" />
@@ -70,7 +72,7 @@ export function KanbanHeader({
             className="h-8 gap-1.5 text-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            New Issue
+            {t('kanban.newIssue')}
           </Button>
         </div>
       </div>

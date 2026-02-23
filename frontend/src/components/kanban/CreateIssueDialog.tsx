@@ -11,6 +11,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Priority, Status } from '@/types/kanban'
 import { useCreateIssue, useStatuses } from '@/hooks/use-kanban'
 import { usePanelStore } from '@/stores/panel-store'
@@ -18,29 +19,30 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { FilePreviewDialog } from '@/components/FilePreviewDialog'
 import { fileContentHash } from '@/lib/file-hash'
 import { PriorityIcon } from './PriorityIcon'
+import { tStatus, tPriority } from '@/lib/i18n-utils'
 
 // ── Data ──────────────────────────────────────────────
 
 const MODELS = [
-  { id: 'opus', label: 'Opus', description: 'Most capable' },
-  { id: 'sonnet', label: 'Sonnet', description: 'Best for coding' },
-  { id: 'haiku', label: 'Haiku', description: 'Fastest' },
+  { id: 'opus', label: 'Opus' },
+  { id: 'sonnet', label: 'Sonnet' },
+  { id: 'haiku', label: 'Haiku' },
 ] as const
 type ModelId = (typeof MODELS)[number]['id']
 
 const PERMISSIONS = [
-  { id: 'auto', label: '自动', icon: ChevronsRight },
-  { id: 'ask', label: '询问', icon: MousePointerClick },
-  { id: 'plan', label: '计划', icon: ListTree },
+  { id: 'auto', icon: ChevronsRight },
+  { id: 'ask', icon: MousePointerClick },
+  { id: 'plan', icon: ListTree },
 ] as const
 type PermissionId = (typeof PERMISSIONS)[number]['id']
 
 const AGENTS = [
-  { id: 'default', label: '默认', description: '自动分配' },
-  { id: 'coder', label: 'Coder', description: '编写代码' },
-  { id: 'planner', label: 'Planner', description: '规划任务' },
-  { id: 'reviewer', label: 'Reviewer', description: '审查代码' },
-  { id: 'researcher', label: 'Researcher', description: '调研分析' },
+  { id: 'default' },
+  { id: 'coder' },
+  { id: 'planner' },
+  { id: 'reviewer' },
+  { id: 'researcher' },
 ] as const
 type AgentId = (typeof AGENTS)[number]['id']
 
@@ -143,6 +145,7 @@ export function CreateIssueForm({
   onCreated?: () => void
   onCancel?: () => void
 }) {
+  const { t } = useTranslation()
   const { data: statuses } = useStatuses(projectId)
   const createIssue = useCreateIssue(projectId)
 
@@ -271,14 +274,14 @@ export function CreateIssueForm({
             value={input}
             onChange={handleTextarea}
             onPaste={handlePaste}
-            placeholder="描述你想做的工作..."
+            placeholder={t('issue.describeWork')}
             rows={4}
             className="w-full bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground/50 px-3 pt-3 pb-2 min-h-[100px]"
             disabled={createIssue.isPending}
           />
           <div className="flex items-center justify-between px-3 pb-2">
             <span className="text-[11px] text-muted-foreground/50">
-              Cmd+Enter 提交
+              {t('issue.cmdEnterSubmit')}
             </span>
             <span className="text-[11px] text-muted-foreground/50 tabular-nums">
               {input.length} / 2000
@@ -289,22 +292,24 @@ export function CreateIssueForm({
 
       {/* ─── Properties (selectors) ─────────────── */}
       <div className="px-5 pt-3.5">
-        <p className="text-xs font-medium text-muted-foreground mb-2">属性</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">
+          {t('issue.properties')}
+        </p>
         <div className="grid grid-cols-2 gap-2">
-          <PropertyRow label="状态">
+          <PropertyRow label={t('issue.status')}>
             <StatusSelect
               statuses={statuses ?? []}
               value={statusId}
               onChange={setStatusId}
             />
           </PropertyRow>
-          <PropertyRow label="优先级">
+          <PropertyRow label={t('issue.priority')}>
             <PrioritySelect value={priority} onChange={setPriority} />
           </PropertyRow>
-          <PropertyRow label="模型">
+          <PropertyRow label={t('createIssue.model')}>
             <ModelSelect value={model} onChange={setModel} />
           </PropertyRow>
-          <PropertyRow label="Agent">
+          <PropertyRow label={t('createIssue.agent')}>
             <AgentSelect value={agent} onChange={setAgent} />
           </PropertyRow>
         </div>
@@ -312,7 +317,9 @@ export function CreateIssueForm({
 
       {/* ─── File upload area ───────────────────── */}
       <div className="px-5 pt-3.5">
-        <p className="text-xs font-medium text-muted-foreground mb-2">附件</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">
+          {t('createIssue.attachments')}
+        </p>
         <div
           className="rounded-lg border border-dashed bg-muted/20 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors"
           onClick={() => fileInputRef.current?.click()}
@@ -320,7 +327,7 @@ export function CreateIssueForm({
           {files.length === 0 ? (
             <div className="flex items-center justify-center gap-2 text-muted-foreground/60">
               <Plus className="h-4 w-4" />
-              <span className="text-xs">点击上传文件或拖拽到此处</span>
+              <span className="text-xs">{t('createIssue.uploadFiles')}</span>
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -352,7 +359,7 @@ export function CreateIssueForm({
               ))}
               <div className="flex items-center justify-center gap-1.5 pt-1 text-muted-foreground/50">
                 <Plus className="h-3 w-3" />
-                <span className="text-[11px]">继续添加</span>
+                <span className="text-[11px]">{t('createIssue.addMore')}</span>
               </div>
             </div>
           )}
@@ -378,7 +385,7 @@ export function CreateIssueForm({
               onClick={onCancel}
               className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent transition-colors"
             >
-              取消
+              {t('common.cancel')}
             </button>
           ) : null}
           <button
@@ -387,7 +394,9 @@ export function CreateIssueForm({
             disabled={createIssue.isPending || !input.trim()}
             className="rounded-lg bg-foreground px-4 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-30"
           >
-            {createIssue.isPending ? '创建中...' : '创建任务'}
+            {createIssue.isPending
+              ? t('createIssue.creating')
+              : t('createIssue.create')}
           </button>
         </div>
       </div>
@@ -406,6 +415,7 @@ export function CreateIssueForm({
 // ── Dialog wrapper ───────────────────────────────────
 
 export function CreateIssueDialog() {
+  const { t } = useTranslation()
   const { projectId = 'default' } = useParams<{ projectId: string }>()
   const { createDialogOpen, createDialogStatusId, closeCreateDialog } =
     usePanelStore()
@@ -423,11 +433,13 @@ export function CreateIssueDialog() {
         onInteractOutside={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Create Issue</DialogTitle>
+        <DialogTitle className="sr-only">{t('issue.createTask')}</DialogTitle>
 
         {/* ─── Header ─────────────────────────────── */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3">
-          <h2 className="text-sm font-semibold text-foreground">创建任务</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {t('issue.createTask')}
+          </h2>
           <button
             type="button"
             onClick={closeCreateDialog}
@@ -479,6 +491,7 @@ function StatusSelect({
   value: string
   onChange: (id: string) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useClickOutside(ref, open, () => setOpen(false))
@@ -495,7 +508,9 @@ function StatusSelect({
           className="h-2 w-2 rounded-full shrink-0"
           style={{ backgroundColor: current?.color }}
         />
-        <span className="truncate">{current?.name ?? '选择状态'}</span>
+        <span className="truncate">
+          {current ? tStatus(t, current.name) : t('issue.selectStatus')}
+        </span>
         <ChevronDown className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
       </button>
       {open ? (
@@ -513,7 +528,7 @@ function StatusSelect({
                 className="h-2 w-2 rounded-full shrink-0"
                 style={{ backgroundColor: s.color }}
               />
-              <span>{s.name}</span>
+              <span>{tStatus(t, s.name)}</span>
             </DropdownItem>
           ))}
         </DropdownPanel>
@@ -529,6 +544,7 @@ function PrioritySelect({
   value: Priority
   onChange: (p: Priority) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useClickOutside(ref, open, () => setOpen(false))
@@ -541,7 +557,7 @@ function PrioritySelect({
         className="flex items-center gap-1.5 text-sm hover:text-foreground transition-colors w-full"
       >
         <PriorityIcon priority={value} />
-        <span className="capitalize truncate">{value}</span>
+        <span className="capitalize truncate">{tPriority(t, value)}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
       </button>
       {open ? (
@@ -556,7 +572,7 @@ function PrioritySelect({
               }}
             >
               <PriorityIcon priority={p} />
-              <span className="capitalize">{p}</span>
+              <span className="capitalize">{tPriority(t, p)}</span>
             </DropdownItem>
           ))}
         </DropdownPanel>
@@ -572,10 +588,10 @@ function AgentSelect({
   value: AgentId
   onChange: (v: AgentId) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useClickOutside(ref, open, () => setOpen(false))
-  const current = AGENTS.find((a) => a.id === value) ?? AGENTS[0]
 
   return (
     <div ref={ref} className="relative">
@@ -585,11 +601,14 @@ function AgentSelect({
         className="flex items-center gap-1.5 text-sm hover:text-foreground transition-colors w-full"
       >
         <Bot className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        <span className="truncate">{current.label}</span>
+        <span className="truncate">{t(`createIssue.agentLabel.${value}`)}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
       </button>
       {open ? (
-        <DropdownPanel className="min-w-[180px]" heading="Agent">
+        <DropdownPanel
+          className="min-w-[180px]"
+          heading={t('createIssue.agent')}
+        >
           {AGENTS.map((a) => (
             <DropdownItem
               key={a.id}
@@ -599,9 +618,11 @@ function AgentSelect({
                 setOpen(false)
               }}
             >
-              <span className="font-medium">{a.label}</span>
+              <span className="font-medium">
+                {t(`createIssue.agentLabel.${a.id}`)}
+              </span>
               <span className="text-xs text-muted-foreground">
-                {a.description}
+                {t(`createIssue.agentDesc.${a.id}`)}
               </span>
             </DropdownItem>
           ))}
@@ -618,6 +639,7 @@ function ModelSelect({
   value: ModelId
   onChange: (v: ModelId) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useClickOutside(ref, open, () => setOpen(false))
@@ -632,7 +654,7 @@ function ModelSelect({
       >
         <span className="truncate">{current.label}</span>
         <span className="text-[10px] text-muted-foreground truncate">
-          {current.description}
+          {t(`createIssue.modelDesc.${current.id}`)}
         </span>
         <ChevronDown className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
       </button>
@@ -649,7 +671,7 @@ function ModelSelect({
             >
               <span className="font-medium">{m.label}</span>
               <span className="text-xs text-muted-foreground">
-                {m.description}
+                {t(`createIssue.modelDesc.${m.id}`)}
               </span>
             </DropdownItem>
           ))}
@@ -668,6 +690,7 @@ function PermissionButton({
   value: PermissionId
   onChange: (v: PermissionId) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useClickOutside(ref, open, () => setOpen(false))
@@ -680,13 +703,16 @@ function PermissionButton({
         type="button"
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-        title="权限模式"
+        title={t('createIssue.permissionMode')}
       >
         <Icon className="h-3.5 w-3.5" />
-        <span>{current.label}</span>
+        <span>{t(`createIssue.perm.${current.id}`)}</span>
       </button>
       {open ? (
-        <DropdownPanel className="min-w-[140px]" heading="权限">
+        <DropdownPanel
+          className="min-w-[140px]"
+          heading={t('createIssue.permission')}
+        >
           {PERMISSIONS.map((perm) => {
             const PermIcon = perm.icon
             return (
@@ -699,7 +725,9 @@ function PermissionButton({
                 }}
               >
                 <PermIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="font-medium">{perm.label}</span>
+                <span className="font-medium">
+                  {t(`createIssue.perm.${perm.id}`)}
+                </span>
               </DropdownItem>
             )
           })}

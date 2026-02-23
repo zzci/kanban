@@ -1,6 +1,7 @@
-import { useRef, useState, useCallback } from 'react'
-import { LayoutGrid, Moon, Plus, Settings, Sun } from 'lucide-react'
+import { useRef, useState, useCallback, useEffect } from 'react'
+import { Globe, LayoutGrid, Moon, Plus, Settings, Sun } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { Project } from '@/types/kanban'
 import { useProjects } from '@/hooks/use-kanban'
 import { Button } from '@/components/ui/button'
@@ -76,6 +77,7 @@ function ProjectButton({
 }
 
 export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { data: projects } = useProjects()
@@ -106,8 +108,8 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Home"
-        title="Home"
+        aria-label={t('sidebar.home')}
+        title={t('sidebar.home')}
         onClick={() => navigate('/')}
       >
         <LayoutGrid className="h-4.5 w-4.5" />
@@ -136,8 +138,8 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
         size="icon"
         onClick={() => setShowCreate(true)}
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Create project"
-        title="Create project"
+        aria-label={t('sidebar.createProject')}
+        title={t('sidebar.createProject')}
       >
         <Plus className="h-4 w-4" />
       </Button>
@@ -149,13 +151,14 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
 
       {/* Bottom section */}
       <div className="mt-auto flex flex-col items-center gap-1">
+        <LanguageSelector />
         <ThemeToggle />
         <Button
           variant="ghost"
           size="icon"
           className="h-9 w-9 text-muted-foreground"
-          aria-label="Settings"
-          title="Settings"
+          aria-label={t('sidebar.settings')}
+          title={t('sidebar.settings')}
         >
           <Settings className="h-4 w-4" />
         </Button>
@@ -164,7 +167,66 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
   )
 }
 
+const LANGUAGES = [
+  { id: 'zh', label: '中文' },
+  { id: 'en', label: 'English' },
+] as const
+
+function LanguageSelector() {
+  const { t, i18n } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const current = LANGUAGES.find((l) => l.id === i18n.language) ?? LANGUAGES[0]
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 text-muted-foreground"
+        aria-label={t('language.switchLanguage')}
+        title={current.label}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Globe className="h-4 w-4" />
+      </Button>
+      {open ? (
+        <div className="absolute left-full bottom-0 ml-2 z-[100] min-w-[120px] rounded-md border bg-popover py-1 shadow-lg">
+          {LANGUAGES.map((lang) => (
+            <button
+              key={lang.id}
+              type="button"
+              onClick={() => {
+                i18n.changeLanguage(lang.id)
+                setOpen(false)
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent ${
+                lang.id === i18n.language ? 'bg-accent/50 font-medium' : ''
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function ThemeToggle() {
+  const { t } = useTranslation()
   const { resolved, toggle } = useTheme()
 
   return (
@@ -173,10 +235,10 @@ function ThemeToggle() {
       size="icon"
       className="h-9 w-9 text-muted-foreground"
       aria-label={
-        resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+        resolved === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')
       }
       title={
-        resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+        resolved === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')
       }
       onClick={toggle}
     >

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FolderOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useCreateProject } from '@/hooks/use-kanban'
 import type { Project } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ export function CreateProjectDialog({
   onOpenChange: (open: boolean) => void
   onCreated: (p: Project) => void
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [directory, setDirectory] = useState('')
@@ -70,9 +72,9 @@ export function CreateProjectDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <div>
-            <DialogTitle>Create Project</DialogTitle>
+            <DialogTitle>{t('project.create')}</DialogTitle>
             <DialogDescription className="mt-1">
-              Create a new project to organize your issues
+              {t('project.createDescription')}
             </DialogDescription>
           </div>
           <DialogCloseButton />
@@ -80,13 +82,13 @@ export function CreateProjectDialog({
         <div className="space-y-4 px-5 pb-5 pt-3">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Name <span className="text-destructive">*</span>
+              {t('project.name')} <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="My Project"
+              placeholder={t('project.namePlaceholder')}
               autoFocus
               className={inputClass}
             />
@@ -94,12 +96,12 @@ export function CreateProjectDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Description
+              {t('project.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this project about?"
+              placeholder={t('project.descriptionPlaceholder')}
               rows={3}
               className={`${inputClass} resize-none`}
             />
@@ -107,21 +109,21 @@ export function CreateProjectDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Directory
+              {t('project.directory')}
             </label>
             <div className="flex gap-1.5">
               <input
                 type="text"
                 value={directory}
                 onChange={(e) => setDirectory(e.target.value)}
-                placeholder="/path/to/project"
+                placeholder={t('project.directoryPlaceholder')}
                 className={inputClass}
               />
               <button
                 type="button"
                 onClick={() => setDirPickerOpen(true)}
                 className="flex shrink-0 items-center justify-center rounded-md border px-2.5 hover:bg-accent transition-colors"
-                title="Browse directories"
+                title={t('project.browseDirectories')}
               >
                 <FolderOpen className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -136,13 +138,13 @@ export function CreateProjectDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Repository URL
+              {t('project.repositoryUrl')}
             </label>
             <input
               type="text"
               value={repositoryUrl}
               onChange={(e) => setRepositoryUrl(e.target.value)}
-              placeholder="https://github.com/org/repo"
+              placeholder={t('project.repositoryUrlPlaceholder')}
               className={inputClass}
             />
           </div>
@@ -153,7 +155,7 @@ export function CreateProjectDialog({
             onClick={handleSubmit}
             disabled={createProject.isPending || !name.trim()}
           >
-            {createProject.isPending ? 'Creating...' : 'Create Project'}
+            {createProject.isPending ? t('project.creating') : t('project.createButton')}
           </Button>
         </div>
       </DialogContent>

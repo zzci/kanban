@@ -1,5 +1,6 @@
 import { DragDropProvider } from '@dnd-kit/react'
 import { useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useBulkUpdateIssues, useIssues, useStatuses } from '@/hooks/use-kanban'
 import type { IssueWithTags } from '@/types/kanban'
 import { useBoardStore } from '@/stores/board-store'
@@ -7,6 +8,7 @@ import { usePanelStore } from '@/stores/panel-store'
 import { KanbanColumn } from './KanbanColumn'
 
 export function KanbanBoard({ projectId }: { projectId: string }) {
+  const { t } = useTranslation()
   const { data: statuses, isLoading: statusesLoading } = useStatuses(projectId)
   const { data: issues, isLoading: issuesLoading } = useIssues(projectId)
   const bulkUpdate = useBulkUpdateIssues(projectId)
@@ -41,7 +43,7 @@ export function KanbanBoard({ projectId }: { projectId: string }) {
   if (statusesLoading || issuesLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-sm text-muted-foreground">Loading board...</div>
+        <div className="text-sm text-muted-foreground">{t('kanban.loadingBoard')}</div>
       </div>
     )
   }
@@ -50,7 +52,7 @@ export function KanbanBoard({ projectId }: { projectId: string }) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-sm text-muted-foreground">
-          No columns configured
+          {t('kanban.noColumns')}
         </div>
       </div>
     )

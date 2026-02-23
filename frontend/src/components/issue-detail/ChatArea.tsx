@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Play, Link } from 'lucide-react'
+import { ArrowLeft, Play, Link, Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useIssue, useStatuses } from '@/hooks/use-kanban'
 import { IssueDetail } from './IssueDetail'
 import { ChatInput } from './ChatInput'
@@ -25,16 +26,18 @@ export function ChatArea({
   onDiffWidthChange: (w: number) => void
   onCloseDiff: () => void
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: issue, isLoading, isError } = useIssue(projectId, issueId)
   const { data: statuses } = useStatuses(projectId)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showReview, setShowReview] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
       </div>
     )
   }
@@ -43,7 +46,7 @@ export function ChatArea({
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <p className="text-sm text-destructive">Issue not found</p>
+          <p className="text-sm text-destructive">{t('issue.notFound')}</p>
           <Button
             variant="ghost"
             size="sm"
@@ -51,7 +54,7 @@ export function ChatArea({
             onClick={() => navigate(`/projects/${projectId}`)}
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to board
+            {t('issue.backToBoard')}
           </Button>
         </div>
       </div>
@@ -69,7 +72,7 @@ export function ChatArea({
             size="icon"
             className="h-7 w-7 text-muted-foreground shrink-0"
             onClick={() => navigate(`/projects/${projectId}`)}
-            title="Back to board"
+            title={t('issue.backToBoard')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -86,14 +89,24 @@ export function ChatArea({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground shrink-0"
-            title="Copy link"
+            className={`h-7 w-7 shrink-0 ${copied ? 'text-green-500' : 'text-muted-foreground'}`}
+            title={t('issue.copyLink')}
             onClick={() => {
               const url = `${window.location.origin}/projects/${projectId}/issues/${issueId}`
-              navigator.clipboard.writeText(url)
+              navigator.clipboard
+                .writeText(url)
+                .then(() => {
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                })
+                .catch(() => {})
             }}
           >
-            <Link className="h-3.5 w-3.5" />
+            {copied ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Link className="h-3.5 w-3.5" />
+            )}
           </Button>
           <Button
             variant="outline"
@@ -102,7 +115,7 @@ export function ChatArea({
             onClick={() => setShowReview(true)}
           >
             <Play className="h-3 w-3" />
-            开始审查
+            {t('review.startReview')}
           </Button>
         </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FileText, ImageIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ export function FilePreviewDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const isImage = file?.type.startsWith('image/') ?? false
 
@@ -89,9 +91,9 @@ export function FilePreviewDialog({
               )}
             </div>
             <div className="mt-4 space-y-2 text-sm">
-              <InfoRow label="Name" value={file.name} />
-              <InfoRow label="Size" value={formatSize(file.size)} />
-              <InfoRow label="Type" value={formatType(file.type)} />
+              <InfoRow label={t('file.name')} value={file.name} />
+              <InfoRow label={t('file.size')} value={formatSize(file.size)} />
+              <InfoRow label={t('file.type')} value={formatType(file.type)} />
             </div>
           </div>
         )}

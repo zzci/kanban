@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { FileText, ImageIcon, Paperclip, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { FilePreviewDialog } from '@/components/FilePreviewDialog'
 import { fileContentHash } from '@/lib/file-hash'
 
@@ -10,6 +11,7 @@ export function ChatInput({
   diffOpen?: boolean
   onToggleDiff?: () => void
 }) {
+  const { t } = useTranslation()
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [previewFile, setPreviewFile] = useState<File | null>(null)
@@ -96,7 +98,7 @@ export function ChatInput({
                 : 'bg-muted/60 hover:bg-muted'
             }`}
           >
-            <span>0 个文件已更改</span>
+            <span>{t('chat.filesChanged', { count: 0 })}</span>
             <span className="text-emerald-500 font-medium">+0</span>
             <span className="text-red-500 font-medium">-0</span>
           </button>
@@ -109,7 +111,7 @@ export function ChatInput({
             value={input}
             onChange={handleInput}
             onPaste={handlePaste}
-            placeholder="Continue working on this task..."
+            placeholder={t('chat.placeholder')}
             rows={1}
             className="w-full bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground/50 min-h-[24px]"
           />
@@ -170,7 +172,7 @@ export function ChatInput({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-              title="Attach file"
+              title={t('chat.attachFile')}
             >
               <Paperclip className="h-3.5 w-3.5" />
             </button>
@@ -181,7 +183,7 @@ export function ChatInput({
             disabled={!input.trim()}
             className="rounded-lg bg-foreground px-3.5 py-1 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-30"
           >
-            发送
+            {t('chat.send')}
           </button>
         </div>
       </div>
@@ -190,6 +192,7 @@ export function ChatInput({
 }
 
 function TokenUsage() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const used = 37
@@ -243,7 +246,7 @@ function TokenUsage() {
       </button>
       {open ? (
         <div className="absolute right-0 bottom-full mb-1.5 z-50 whitespace-nowrap rounded-lg border bg-popover px-3 py-2 shadow-lg text-xs text-popover-foreground">
-          上下文: {pct}% · {used}K / {total}K tokens
+          {t('chat.context', { pct, used, total })}
         </div>
       ) : null}
     </div>

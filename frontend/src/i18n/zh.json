@@ -1,0 +1,164 @@
+{
+  "common": {
+    "cancel": "取消",
+    "save": "保存",
+    "loading": "加载中...",
+    "search": "搜索...",
+    "select": "选择",
+    "close": "关闭"
+  },
+  "project": {
+    "projects": "项目",
+    "create": "创建项目",
+    "createDescription": "创建新项目以组织你的任务",
+    "settings": "项目设置",
+    "settingsDescription": "更新项目详情",
+    "name": "名称",
+    "description": "描述",
+    "directory": "目录",
+    "repositoryUrl": "仓库 URL",
+    "namePlaceholder": "我的项目",
+    "descriptionPlaceholder": "这个项目是关于什么的？",
+    "directoryPlaceholder": "/path/to/project",
+    "repositoryUrlPlaceholder": "https://github.com/org/repo",
+    "createButton": "创建项目",
+    "creating": "创建中...",
+    "saving": "保存中...",
+    "saveChanges": "保存更改",
+    "newProject": "新建项目",
+    "issueCount": "{{count}} 个任务",
+    "statusCount": "{{count}} 个状态",
+    "browseDirectories": "浏览目录"
+  },
+  "kanban": {
+    "newIssue": "新建任务",
+    "filter": "筛选",
+    "loadingBoard": "加载看板中...",
+    "noColumns": "没有配置列",
+    "loadingProject": "加载项目中...",
+    "projectNotFound": "找不到项目",
+    "issueDetails": "任务详情",
+    "createIssueIn": "在 {{name}} 中创建任务",
+    "resizePanel": "调整面板大小"
+  },
+  "issue": {
+    "status": "状态",
+    "priority": "优先级",
+    "tags": "标签",
+    "noDescription": "暂无描述",
+    "description": "描述",
+    "created": "创建时间",
+    "updated": "更新时间",
+    "createTask": "创建任务",
+    "describeWork": "描述你想做的工作...",
+    "cmdEnterSubmit": "Cmd+Enter 提交",
+    "properties": "属性",
+    "selectStatus": "选择状态",
+    "notFound": "找不到任务",
+    "backToBoard": "返回看板",
+    "noChatMessages": "暂无对话记录，发送消息开始交流",
+    "copyLink": "复制链接",
+    "openFullPage": "全屏打开",
+    "closePanel": "关闭面板",
+    "priorityUrgent": "紧急",
+    "priorityHigh": "高",
+    "priorityMedium": "中",
+    "priorityLow": "低"
+  },
+  "createIssue": {
+    "title": "创建任务",
+    "model": "模型",
+    "agent": "Agent",
+    "attachments": "附件",
+    "uploadFiles": "点击上传文件或拖拽到此处",
+    "addMore": "继续添加",
+    "creating": "创建中...",
+    "create": "创建任务",
+    "permission": "权限",
+    "permissionMode": "权限模式",
+    "perm": {
+      "auto": "自动",
+      "ask": "询问",
+      "plan": "计划"
+    },
+    "agentLabel": {
+      "default": "默认",
+      "coder": "Coder",
+      "planner": "Planner",
+      "reviewer": "Reviewer",
+      "researcher": "Researcher"
+    },
+    "agentDesc": {
+      "default": "自动分配",
+      "coder": "编写代码",
+      "planner": "规划任务",
+      "reviewer": "审查代码",
+      "researcher": "调研分析"
+    },
+    "modelDesc": {
+      "opus": "最强大",
+      "sonnet": "最适合编码",
+      "haiku": "最快"
+    }
+  },
+  "chat": {
+    "send": "发送",
+    "filesChanged": "{{count}} 个文件已更改",
+    "placeholder": "继续处理此任务...",
+    "attachFile": "附加文件",
+    "context": "上下文: {{pct}}% \u00b7 {{used}}K / {{total}}K tokens"
+  },
+  "diff": {
+    "changes": "更改",
+    "closeDiffPanel": "关闭更改面板",
+    "noChanges": "没有要显示的更改"
+  },
+  "review": {
+    "startReview": "开始审查",
+    "reviewDescription": "请求编码代理审查您的更改并提供反馈。",
+    "additionalNotes": "附加说明（可选）",
+    "instructionsPlaceholder": "为审查添加具体说明...",
+    "includeGitContext": "包含 Git 上下文",
+    "includeGitDescription": "告诉代理如何查看此分支上的所有更改",
+    "newSession": "新会话"
+  },
+  "directory": {
+    "browse": "浏览目录",
+    "browseDescription": "导航到目录并选择",
+    "noSubdirs": "没有子目录"
+  },
+  "file": {
+    "name": "名称",
+    "size": "大小",
+    "type": "类型"
+  },
+  "theme": {
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式"
+  },
+  "sidebar": {
+    "home": "主页",
+    "createProject": "创建项目",
+    "settings": "设置"
+  },
+  "language": {
+    "switchLanguage": "切换语言"
+  },
+  "statusName": {
+    "To Do": "待办",
+    "In Progress": "进行中",
+    "In Review": "审查中",
+    "Done": "已完成"
+  },
+  "tagName": {
+    "Bug": "缺陷",
+    "Feature": "功能",
+    "Docs": "文档"
+  },
+  "priorityName": {
+    "urgent": "紧急",
+    "high": "高",
+    "medium": "中",
+    "low": "低"
+  }
+}

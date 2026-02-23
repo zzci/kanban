@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useProject } from '@/hooks/use-kanban'
 import { AppSidebar } from '@/components/kanban/AppSidebar'
 import {
@@ -15,6 +16,7 @@ const MIN_CHAT_WIDTH = 300
 const DEFAULT_DIFF_WIDTH = 360
 
 export default function IssueDetailPage() {
+  const { t } = useTranslation()
   const { projectId = 'default', issueId = '' } = useParams<{
     projectId: string
     issueId: string
@@ -41,7 +43,9 @@ export default function IssueDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <p className="text-sm text-muted-foreground">Loading project...</p>
+        <p className="text-sm text-muted-foreground">
+          {t('kanban.loadingProject')}
+        </p>
       </div>
     )
   }
@@ -49,7 +53,9 @@ export default function IssueDetailPage() {
   if (isError || !project) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <p className="text-sm text-destructive">Project not found</p>
+        <p className="text-sm text-destructive">
+          {t('kanban.projectNotFound')}
+        </p>
       </div>
     )
   }
@@ -79,7 +85,7 @@ export default function IssueDetailPage() {
           <div className="w-full max-w-[580px] rounded-xl">
             <div className="px-5 pt-4 pb-2">
               <h2 className="text-sm font-semibold text-foreground">
-                创建任务
+                {t('issue.createTask')}
               </h2>
             </div>
             <CreateIssueForm projectId={projectId} autoFocus />

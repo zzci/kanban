@@ -1,11 +1,13 @@
 import { useDroppable } from '@dnd-kit/react'
 import { CollisionPriority } from '@dnd-kit/abstract'
 import { Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Issue, Status, Tag } from '@/types/kanban'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { usePanelStore } from '@/stores/panel-store'
+import { tStatus } from '@/lib/i18n-utils'
 import { KanbanCard } from './KanbanCard'
 
 export function KanbanColumn({
@@ -17,6 +19,7 @@ export function KanbanColumn({
   issues: (Issue & { tags?: Tag[] })[]
   selectedIssueId?: string | null
 }) {
+  const { t } = useTranslation()
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
 
   const { ref, isDropTarget } = useDroppable({
@@ -44,7 +47,7 @@ export function KanbanColumn({
           style={{ backgroundColor: status.color }}
         />
         <span className="text-sm font-medium text-foreground">
-          {status.name}
+          {tStatus(t, status.name)}
         </span>
         <Badge
           variant="secondary"
@@ -57,7 +60,7 @@ export function KanbanColumn({
           size="icon"
           className="ml-auto h-6 w-6 text-muted-foreground"
           onClick={() => openCreateDialog(status.id)}
-          aria-label={`Create issue in ${status.name}`}
+          aria-label={t('kanban.createIssueIn', { name: status.name })}
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>

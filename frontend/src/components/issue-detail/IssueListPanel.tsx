@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Settings, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useIssues, useStatuses, useProject } from '@/hooks/use-kanban'
 import type { IssueWithTags, Status } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import { usePanelStore } from '@/stores/panel-store'
 import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
+import { tStatus } from '@/lib/i18n-utils'
 
 export function IssueListPanel({
   projectId,
@@ -16,6 +18,7 @@ export function IssueListPanel({
   activeIssueId: string
   projectName: string
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: issues } = useIssues(projectId)
   const { data: statuses } = useStatuses(projectId)
@@ -87,7 +90,7 @@ export function IssueListPanel({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索..."
+            placeholder={t('common.search')}
             className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/40"
           />
         </div>
@@ -136,6 +139,7 @@ function StatusGroup({
   activeIssueId: string
   onNavigate: (issueId: string) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div>
       {/* Status header bar — tinted with the status color */}
@@ -150,7 +154,7 @@ function StatusGroup({
           style={{ backgroundColor: status.color }}
         />
         <span className="font-semibold text-foreground/80 truncate">
-          {status.name}
+          {tStatus(t, status.name)}
         </span>
         <span className="text-[10px] text-muted-foreground/50 ml-auto shrink-0">
           ({issues.length})

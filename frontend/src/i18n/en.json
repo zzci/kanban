@@ -1,0 +1,164 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "search": "Search...",
+    "select": "Select",
+    "close": "Close"
+  },
+  "project": {
+    "projects": "Projects",
+    "create": "Create Project",
+    "createDescription": "Create a new project to organize your issues",
+    "settings": "Project Settings",
+    "settingsDescription": "Update project details",
+    "name": "Name",
+    "description": "Description",
+    "directory": "Directory",
+    "repositoryUrl": "Repository URL",
+    "namePlaceholder": "My Project",
+    "descriptionPlaceholder": "What is this project about?",
+    "directoryPlaceholder": "/path/to/project",
+    "repositoryUrlPlaceholder": "https://github.com/org/repo",
+    "createButton": "Create Project",
+    "creating": "Creating...",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "newProject": "New Project",
+    "issueCount": "{{count}} issues",
+    "statusCount": "{{count}} statuses",
+    "browseDirectories": "Browse directories"
+  },
+  "kanban": {
+    "newIssue": "New Issue",
+    "filter": "Filter",
+    "loadingBoard": "Loading board...",
+    "noColumns": "No columns configured",
+    "loadingProject": "Loading project...",
+    "projectNotFound": "Project not found",
+    "issueDetails": "Issue Details",
+    "createIssueIn": "Create issue in {{name}}",
+    "resizePanel": "Resize panel"
+  },
+  "issue": {
+    "status": "Status",
+    "priority": "Priority",
+    "tags": "Tags",
+    "noDescription": "No description",
+    "description": "Description",
+    "created": "Created",
+    "updated": "Updated",
+    "createTask": "Create Task",
+    "describeWork": "Describe what you want to work on...",
+    "cmdEnterSubmit": "Cmd+Enter to submit",
+    "properties": "Properties",
+    "selectStatus": "Select status",
+    "notFound": "Issue not found",
+    "backToBoard": "Back to board",
+    "noChatMessages": "No messages yet, send a message to start",
+    "copyLink": "Copy link",
+    "openFullPage": "Open in full page",
+    "closePanel": "Close panel",
+    "priorityUrgent": "Urgent",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low"
+  },
+  "createIssue": {
+    "title": "Create Task",
+    "model": "Model",
+    "agent": "Agent",
+    "attachments": "Attachments",
+    "uploadFiles": "Click to upload or drag and drop",
+    "addMore": "Add more",
+    "creating": "Creating...",
+    "create": "Create Task",
+    "permission": "Permission",
+    "permissionMode": "Permission mode",
+    "perm": {
+      "auto": "Auto",
+      "ask": "Ask",
+      "plan": "Plan"
+    },
+    "agentLabel": {
+      "default": "Default",
+      "coder": "Coder",
+      "planner": "Planner",
+      "reviewer": "Reviewer",
+      "researcher": "Researcher"
+    },
+    "agentDesc": {
+      "default": "Auto assign",
+      "coder": "Write code",
+      "planner": "Plan tasks",
+      "reviewer": "Review code",
+      "researcher": "Research"
+    },
+    "modelDesc": {
+      "opus": "Most capable",
+      "sonnet": "Best for coding",
+      "haiku": "Fastest"
+    }
+  },
+  "chat": {
+    "send": "Send",
+    "filesChanged": "{{count}} files changed",
+    "placeholder": "Continue working on this task...",
+    "attachFile": "Attach file",
+    "context": "Context: {{pct}}% \u00b7 {{used}}K / {{total}}K tokens"
+  },
+  "diff": {
+    "changes": "Changes",
+    "closeDiffPanel": "Close diff panel",
+    "noChanges": "No changes to display"
+  },
+  "review": {
+    "startReview": "Start Review",
+    "reviewDescription": "Request a coding agent to review your changes and provide feedback.",
+    "additionalNotes": "Additional notes (optional)",
+    "instructionsPlaceholder": "Add any specific instructions for the review...",
+    "includeGitContext": "Include Git context",
+    "includeGitDescription": "Tell the agent how to see all changes on this branch",
+    "newSession": "New session"
+  },
+  "directory": {
+    "browse": "Browse Directory",
+    "browseDescription": "Navigate to a directory and select it",
+    "noSubdirs": "No subdirectories"
+  },
+  "file": {
+    "name": "Name",
+    "size": "Size",
+    "type": "Type"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "sidebar": {
+    "home": "Home",
+    "createProject": "Create project",
+    "settings": "Settings"
+  },
+  "language": {
+    "switchLanguage": "Switch language"
+  },
+  "statusName": {
+    "To Do": "To Do",
+    "In Progress": "In Progress",
+    "In Review": "In Review",
+    "Done": "Done"
+  },
+  "tagName": {
+    "Bug": "Bug",
+    "Feature": "Feature",
+    "Docs": "Docs"
+  },
+  "priorityName": {
+    "urgent": "Urgent",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  }
+}

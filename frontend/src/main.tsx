@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import IssueDetailPage from './pages/IssueDetailPage'
 import KanbanPage from './pages/KanbanPage'
+import './i18n'
 import './index.css'
 
 const queryClient = new QueryClient()

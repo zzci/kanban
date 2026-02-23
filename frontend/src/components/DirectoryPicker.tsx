@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Folder, ArrowUp, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { kanbanApi } from '@/lib/kanban-api'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,6 +31,7 @@ export function DirectoryPicker({
   initialPath,
   onSelect,
 }: DirectoryPickerProps) {
+  const { t } = useTranslation()
   const [dirData, setDirData] = useState<DirData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,9 +82,9 @@ export function DirectoryPicker({
       <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <div>
-            <DialogTitle>Browse Directory</DialogTitle>
+            <DialogTitle>{t('directory.browse')}</DialogTitle>
             <DialogDescription className="mt-1">
-              Navigate to a directory and select it
+              {t('directory.browseDescription')}
             </DialogDescription>
           </div>
           <DialogCloseButton />
@@ -116,7 +118,7 @@ export function DirectoryPicker({
                 )}
                 {dirData?.dirs.length === 0 && !dirData.parent && (
                   <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                    No subdirectories
+                    {t('directory.noSubdirs')}
                   </div>
                 )}
                 {dirData?.dirs.map((dir) => (
@@ -141,14 +143,14 @@ export function DirectoryPicker({
               className="flex-1"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               className="flex-1"
               onClick={handleSelect}
               disabled={!dirData || loading}
             >
-              Select
+              {t('common.select')}
             </Button>
           </div>
         </div>

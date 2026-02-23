@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const MIN_WIDTH = 260
 
@@ -12,6 +13,8 @@ export function DiffPanel({
   onWidthChange: (w: number) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation()
+
   return (
     <div
       className="relative h-full shrink-0 border-l border-border bg-background"
@@ -24,12 +27,12 @@ export function DiffPanel({
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0 min-h-[45px]">
-          <span className="text-sm font-medium">更改</span>
+          <span className="text-sm font-medium">{t('diff.changes')}</span>
           <button
             type="button"
             onClick={onClose}
             className="flex items-center justify-center h-7 w-7 rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            aria-label="Close diff panel"
+            aria-label={t('diff.closeDiffPanel')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -38,7 +41,7 @@ export function DiffPanel({
         {/* Empty state */}
         <div className="flex-1 flex items-center justify-center">
           <span className="text-sm text-muted-foreground">
-            没有要显示的更改
+            {t('diff.noChanges')}
           </span>
         </div>
       </div>

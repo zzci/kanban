@@ -1,16 +1,20 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { GripVertical } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useProject, useIssues, useStatuses } from '@/hooks/use-kanban'
-import { usePanelStore } from '@/stores/panel-store'
+import {
+  usePanelStore,
+  PANEL_MIN_WIDTH,
+  PANEL_MAX_WIDTH_RATIO,
+} from '@/stores/panel-store'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
 import { KanbanHeader } from '@/components/kanban/KanbanHeader'
 import { AppSidebar } from '@/components/kanban/AppSidebar'
 import { IssuePanel } from '@/components/kanban/IssuePanel'
 import { CreateIssueDialog } from '@/components/kanban/CreateIssueDialog'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 
 export default function KanbanPage() {
+  const { t } = useTranslation()
   const { projectId = 'default' } = useParams<{ projectId: string }>()
   const { data: project, isLoading, isError } = useProject(projectId)
   const { data: issues } = useIssues(projectId)
@@ -21,7 +25,9 @@ export default function KanbanPage() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <p className="text-sm text-muted-foreground">Loading project...</p>
+        <p className="text-sm text-muted-foreground">
+          {t('kanban.loadingProject')}
+        </p>
       </div>
     )
   }
@@ -29,7 +35,9 @@ export default function KanbanPage() {
   if (isError || !project) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <p className="text-sm text-destructive">Project not found</p>
+        <p className="text-sm text-destructive">
+          {t('kanban.projectNotFound')}
+        </p>
       </div>
     )
   }
@@ -39,8 +47,11 @@ export default function KanbanPage() {
       {/* Left Sidebar */}
       <AppSidebar activeProjectId={projectId} />
 
-      {/* Main Content */}
-      <div className="flex flex-1 min-w-0 flex-col">
+      {/* Main Content — inert when panel is open to trap keyboard focus */}
+      <div
+        className="flex flex-1 min-w-0 flex-col"
+        {...(isPanelOpen ? { inert: '' as unknown as boolean } : {})}
+      >
         <KanbanHeader
           project={project}
           issueCount={issues?.length ?? 0}
@@ -54,46 +65,58 @@ export default function KanbanPage() {
         </div>
       </div>
 
+      {/* Overlay — covers entire page, click to close panel */}
+      {isPanelOpen ? (
+        <div className="fixed inset-0 z-20 bg-black/50" onClick={close} />
+      ) : null}
+
       {/* Create Issue Dialog */}
       <CreateIssueDialog />
 
-      {/* Issue View Sheet */}
-      <Sheet open={isPanelOpen} onOpenChange={(open) => !open && close()}>
-        <SheetContent
-          className="flex-row p-0 gap-0"
+      {/* Issue Side Panel — fixed, floats above overlay */}
+      {isPanelOpen && statuses && panel.kind === 'view' ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('kanban.issueDetails')}
+          className="fixed inset-y-0 right-0 z-30 border-l border-border bg-card"
           style={{ width }}
-          aria-describedby={undefined}
         >
-          <SheetTitle className="sr-only">Issue Details</SheetTitle>
-
-          {/* Resize handle */}
           <ResizeHandle />
-
-          {/* Panel content */}
-          {statuses && panel.kind === 'view' ? (
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <IssuePanel
-                projectId={projectId}
-                statuses={statuses}
-                issue={panel.issue}
-                onClose={close}
-              />
-            </div>
-          ) : null}
-        </SheetContent>
-      </Sheet>
+          <IssuePanel
+            projectId={projectId}
+            statuses={statuses}
+            issue={panel.issue}
+            onClose={close}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }
 
 function ResizeHandle() {
-  const setWidth = usePanelStore((s) => s.setWidth)
+  const { t } = useTranslation()
   const width = usePanelStore((s) => s.width)
+  const setWidth = usePanelStore.getState().setWidth
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null)
+
+  const maxWidth = Math.round(
+    (typeof window === 'undefined' ? 800 : window.innerWidth) *
+      PANEL_MAX_WIDTH_RATIO,
+  )
 
   return (
     <div
-      className="w-4 shrink-0 cursor-col-resize flex items-center justify-center group relative"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={t('kanban.resizePanel')}
+      aria-valuenow={width}
+      aria-valuemin={PANEL_MIN_WIDTH}
+      aria-valuemax={maxWidth}
+      tabIndex={0}
+      className="absolute left-0 top-0 bottom-0 w-2 -translate-x-1/2 z-10 cursor-col-resize group select-none outline-none"
+      onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => {
         if (e.button !== 0) return
         e.preventDefault()
@@ -109,15 +132,19 @@ function ResizeHandle() {
       onPointerUp={() => {
         dragRef.current = null
       }}
+      onKeyDown={(e) => {
+        const step = e.shiftKey ? 50 : 10
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          setWidth(width + step)
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          setWidth(width - step)
+        }
+      }}
     >
-      {/* Top border segment */}
-      <div className="absolute top-0 left-0 w-[6px] bottom-[calc(50%+12px)] bg-border group-hover:bg-primary/70 group-active:bg-primary transition-colors rounded-b-sm" />
-      {/* Drag grip indicator */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(50%-3px)] pointer-events-none">
-        <GripVertical className="h-5 w-5 text-muted-foreground/50 group-hover:text-muted-foreground group-active:text-foreground transition-colors" />
-      </div>
-      {/* Bottom border segment */}
-      <div className="absolute bottom-0 left-0 w-[6px] top-[calc(50%+12px)] bg-border group-hover:bg-primary/70 group-active:bg-primary transition-colors rounded-t-sm" />
+      <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 focus-visible:opacity-100 bg-primary/50 group-active:bg-primary transition-opacity" />
     </div>
   )
 }
