@@ -2,12 +2,18 @@ import { DragDropProvider } from '@dnd-kit/react'
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBulkUpdateIssues, useIssues, useStatuses } from '@/hooks/use-kanban'
-import type { IssueWithTags } from '@/types/kanban'
+import type { Issue, IssueWithTags, Tag } from '@/types/kanban'
 import { useBoardStore } from '@/stores/board-store'
 import { usePanelStore } from '@/stores/panel-store'
 import { KanbanColumn } from './KanbanColumn'
 
-export function KanbanBoard({ projectId }: { projectId: string }) {
+export function KanbanBoard({
+  projectId,
+  onCardClick,
+}: {
+  projectId: string
+  onCardClick?: (issue: Issue & { tags?: Tag[] }) => void
+}) {
   const { t } = useTranslation()
   const { data: statuses, isLoading: statusesLoading } = useStatuses(projectId)
   const { data: issues, isLoading: issuesLoading } = useIssues(projectId)
@@ -77,6 +83,7 @@ export function KanbanBoard({ projectId }: { projectId: string }) {
             status={status}
             issues={issuesByStatus.get(status.id) ?? []}
             selectedIssueId={selectedIssueId}
+            onCardClick={onCardClick}
           />
         ))}
       </div>

@@ -130,15 +130,21 @@ export function ChatArea({
         </div>
 
         {/* Issue detail + messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto py-2">
-          <IssueDetail
-            issue={issue}
-            status={statuses?.find((s) => s.id === issue.statusId)}
-          />
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <div className="flex flex-col min-h-full justify-end py-2">
+            <IssueDetail
+              issue={issue}
+              status={statuses?.find((s) => s.id === issue.statusId)}
+            />
+          </div>
         </div>
 
         {/* Input */}
-        <ChatInput diffOpen={showDiff} onToggleDiff={onToggleDiff} />
+        <ChatInput
+          diffOpen={showDiff}
+          onToggleDiff={onToggleDiff}
+          scrollRef={scrollRef}
+        />
       </div>
 
       {/* Diff panel — full-screen overlay on mobile, inline on desktop */}

@@ -7,9 +7,11 @@ import { fileContentHash } from '@/lib/file-hash'
 export function ChatInput({
   diffOpen,
   onToggleDiff,
+  scrollRef,
 }: {
   diffOpen?: boolean
   onToggleDiff?: () => void
+  scrollRef?: React.RefObject<HTMLDivElement | null>
 }) {
   const { t } = useTranslation()
   const [input, setInput] = useState('')
@@ -84,8 +86,8 @@ export function ChatInput({
   }, [])
 
   return (
-    <div className="shrink-0 px-3 pb-3 pt-1">
-      <div className="rounded-xl border bg-card shadow-sm">
+    <div className="shrink-0 w-full min-w-0 px-3 pb-3 pt-1">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         {/* Status bar */}
         <div className="flex items-center px-3 py-1.5 border-b border-border/40">
           <button
@@ -110,6 +112,15 @@ export function ChatInput({
             value={input}
             onChange={handleInput}
             onPaste={handlePaste}
+            onFocus={() => {
+              // Scroll chat to bottom when keyboard opens on mobile
+              setTimeout(() => {
+                scrollRef?.current?.scrollTo({
+                  top: scrollRef.current.scrollHeight,
+                  behavior: 'smooth',
+                })
+              }, 100)
+            }}
             placeholder={t('chat.placeholder')}
             rows={1}
             className="w-full bg-transparent text-base md:text-sm resize-none outline-none placeholder:text-muted-foreground/50 min-h-[24px]"

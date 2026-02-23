@@ -14,10 +14,12 @@ export function KanbanColumn({
   status,
   issues,
   selectedIssueId,
+  onCardClick,
 }: {
   status: Status
   issues: (Issue & { tags?: Tag[] })[]
   selectedIssueId?: string | null
+  onCardClick?: (issue: Issue & { tags?: Tag[] }) => void
 }) {
   const { t } = useTranslation()
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
@@ -36,8 +38,10 @@ export function KanbanColumn({
 
   return (
     <div
-      className={`flex h-full min-w-[85vw] md:min-w-[260px] flex-1 flex-col rounded-lg border bg-muted/40 snap-center md:snap-align-none ${
-        isDropTarget ? 'ring-2 ring-primary/20' : ''
+      className={`flex h-full min-w-[85vw] md:min-w-[260px] flex-1 flex-col rounded-lg border snap-center md:snap-align-none transition-colors duration-200 ${
+        isDropTarget
+          ? 'ring-2 ring-primary/30 bg-primary/[0.04] border-primary/20'
+          : 'bg-muted/40'
       }`}
     >
       {/* Column header */}
@@ -81,6 +85,7 @@ export function KanbanColumn({
             index={index}
             columnStatusId={status.id}
             isSelected={selectedIssueId === issue.id}
+            onCardClick={onCardClick}
           />
         ))}
         {/* Spacer extends the droppable zone to the bottom of the column */}

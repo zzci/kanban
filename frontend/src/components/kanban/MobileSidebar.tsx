@@ -8,7 +8,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '@/types/kanban'
 import { useProjects } from '@/hooks/use-kanban'
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
+import { AppLogo } from '@/components/AppLogo'
 
 const LANGUAGES = [
   { id: 'zh', label: '中文' },
@@ -56,29 +57,24 @@ export function MobileSidebar({
   const [open, setOpen] = useState(false)
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const location = useLocation()
   const { data: projects } = useProjects()
   const { resolved, toggle } = useTheme()
   const [showCreate, setShowCreate] = useState(false)
   const [langExpanded, setLangExpanded] = useState(false)
 
-  const isIssuesRoute = location.pathname.includes('/issues')
-
-  const projectPath = useCallback(
-    (projectId: string) =>
-      isIssuesRoute
-        ? `/projects/${projectId}/issues`
-        : `/projects/${projectId}`,
-    [isIssuesRoute],
+  // Mobile always uses list mode
+  const mobileProjectPath = useCallback(
+    (projectId: string) => `/projects/${projectId}/issues`,
+    [],
   )
 
   const handleProjectCreated = useCallback(
     (project: Project) => {
       setShowCreate(false)
       setOpen(false)
-      navigate(projectPath(project.id))
+      navigate(mobileProjectPath(project.id))
     },
-    [navigate, projectPath],
+    [navigate, mobileProjectPath],
   )
 
   const currentLang =
@@ -96,26 +92,18 @@ export function MobileSidebar({
           <SheetTitle className="sr-only">{t('sidebar.menu')}</SheetTitle>
 
           <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b">
-              <img src="/favicon.svg" alt="Kanban" className="h-8 w-8" />
-              <span className="text-sm font-semibold">Kanban</span>
-            </div>
-
-            {/* Home link */}
+            {/* Header — links to homepage */}
             <button
               type="button"
               onClick={() => {
                 setOpen(false)
                 navigate('/')
               }}
-              className="flex items-center gap-3 px-4 min-h-[44px] text-sm text-foreground/80 hover:bg-accent/50 active:bg-accent transition-colors"
+              className="flex items-center gap-3 px-4 py-3 border-b hover:bg-accent/50 active:bg-accent transition-colors"
             >
-              <img src="/favicon.svg" alt="Home" className="h-5 w-5" />
-              {t('sidebar.home')}
+              <AppLogo className="h-8 w-8" />
+              <span className="text-sm font-semibold">Kanban</span>
             </button>
-
-            <Separator />
 
             {/* Project list */}
             <div className="px-4 pt-3 pb-1">
@@ -135,7 +123,7 @@ export function MobileSidebar({
                     type="button"
                     onClick={() => {
                       setOpen(false)
-                      navigate(projectPath(project.id))
+                      navigate(mobileProjectPath(project.id))
                     }}
                     className={`flex items-center gap-3 w-full px-2 min-h-[44px] rounded-md text-left transition-colors ${
                       isActive

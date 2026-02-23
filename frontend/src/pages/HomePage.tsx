@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import {
   Globe,
+  LayoutGrid,
+  List,
   Plus,
   Hash,
   Layers,
@@ -23,6 +25,8 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTheme } from '@/hooks/use-theme'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { AppLogo } from '@/components/AppLogo'
+import { useViewModeStore } from '@/stores/view-mode-store'
 
 const LANGUAGES = [
   { id: 'zh', label: '中文' },
@@ -136,14 +140,8 @@ function MobileHomeMenu({ onCreateProject }: { onCreateProject: () => void }) {
         >
           <SheetTitle className="sr-only">{t('sidebar.menu')}</SheetTitle>
           <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b">
-              <img src="/favicon.svg" alt="Kanban" className="h-8 w-8" />
-              <span className="text-sm font-semibold">{t('sidebar.menu')}</span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex-1">
+            {/* Actions — no header */}
+            <div className="flex-1 pt-2">
               {/* New project */}
               <button
                 type="button"
@@ -242,8 +240,70 @@ function DesktopHeaderControls({
   const currentLang =
     LANGUAGES.find((l) => l.id === i18n.language) ?? LANGUAGES[0]
 
+  const { mode, setMode } = useViewModeStore()
+  const [viewOpen, setViewOpen] = useState(false)
+  const viewRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!viewOpen) return
+    function handleClick(e: MouseEvent) {
+      if (viewRef.current && !viewRef.current.contains(e.target as Node)) {
+        setViewOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [viewOpen])
+
+  const ViewIcon = mode === 'kanban' ? LayoutGrid : List
+
   return (
     <div className="ml-auto flex items-center gap-2">
+      {/* View mode dropdown */}
+      <div ref={viewRef} className="relative">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 text-muted-foreground"
+          onClick={() => setViewOpen((v) => !v)}
+        >
+          <ViewIcon className="h-4 w-4" />
+          <span className="text-xs">
+            {mode === 'kanban' ? 'Kanban' : 'List'}
+          </span>
+        </Button>
+        {viewOpen ? (
+          <div className="absolute right-0 top-full mt-1 z-[100] min-w-[120px] rounded-md border bg-popover py-1 shadow-lg">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('kanban')
+                setViewOpen(false)
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent ${
+                mode === 'kanban' ? 'bg-accent/50 font-medium' : ''
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Kanban
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('list')
+                setViewOpen(false)
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent ${
+                mode === 'list' ? 'bg-accent/50 font-medium' : ''
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              List
+            </button>
+          </div>
+        ) : null}
+      </div>
+
       <div ref={langRef} className="relative">
         <Button
           variant="ghost"
@@ -308,20 +368,28 @@ export default function HomePage() {
   const { data: projects, isLoading } = useProjects()
   const [showCreate, setShowCreate] = useState(false)
   const isMobile = useIsMobile()
+  const globalProjectPath = useViewModeStore((s) => s.projectPath)
+
+  // Mobile always uses list mode
+  const projectPath = useCallback(
+    (projectId: string) =>
+      isMobile ? `/projects/${projectId}/issues` : globalProjectPath(projectId),
+    [isMobile, globalProjectPath],
+  )
 
   const handleProjectCreated = useCallback(
     (project: Project) => {
-      navigate(`/projects/${project.id}`)
+      navigate(projectPath(project.id))
     },
-    [navigate],
+    [navigate, projectPath],
   )
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen text-foreground animate-page-enter">
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-12">
         {/* Header row — always horizontal */}
         <div className="mb-6 flex items-center gap-3 md:mb-8">
-          <img src="/favicon.svg" alt="Kanban" className="h-9 w-9" />
+          <AppLogo className="h-9 w-9" />
           <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
             {t('project.projects')}
           </h1>
@@ -364,12 +432,17 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects?.map((project) => (
-              <ProjectCard
+            {projects?.map((project, index) => (
+              <div
                 key={project.id}
-                project={project}
-                onClick={() => navigate(`/projects/${project.id}`)}
-              />
+                className="animate-card-enter"
+                style={{ animationDelay: `${index * 60}ms` }}
+              >
+                <ProjectCard
+                  project={project}
+                  onClick={() => navigate(projectPath(project.id))}
+                />
+              </div>
             ))}
           </div>
         )}

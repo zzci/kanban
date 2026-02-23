@@ -1,10 +1,20 @@
 import { useState } from 'react'
-import { Plus, Search, Settings, SlidersHorizontal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  Settings,
+  SlidersHorizontal,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '@/types/kanban'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { usePanelStore } from '@/stores/panel-store'
+import { useViewModeStore } from '@/stores/view-mode-store'
 import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
 
 export function KanbanHeader({
@@ -19,8 +29,11 @@ export function KanbanHeader({
   mobileNav?: React.ReactNode
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
+  const { mode, setMode } = useViewModeStore()
   const [showSettings, setShowSettings] = useState(false)
+  const isListView = mode === 'list'
 
   return (
     <div className="shrink-0 border-b border-border bg-card">
@@ -46,6 +59,42 @@ export function KanbanHeader({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* View mode toggle */}
+          <div className="flex items-center rounded-md border border-border bg-muted/30 p-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('kanban')
+                navigate(`/projects/${project.id}`)
+              }}
+              className={cn(
+                'rounded-sm px-2 py-1 text-xs transition-colors',
+                !isListView
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label="Kanban view"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('list')
+                navigate(`/projects/${project.id}/issues`)
+              }}
+              className={cn(
+                'rounded-sm px-2 py-1 text-xs transition-colors',
+                isListView
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label="List view"
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
           {/* Search — hidden on mobile */}
           <div className="hidden md:flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5">
             <Search className="h-3.5 w-3.5 text-muted-foreground" />

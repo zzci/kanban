@@ -1,0 +1,12 @@
+import { useTheme } from '@/hooks/use-theme'
+
+export function AppLogo({ className }: { className?: string }) {
+  const { resolved } = useTheme()
+  return (
+    <img
+      src={resolved === 'dark' ? '/favicon-dark.svg' : '/favicon.svg'}
+      alt="Kanban"
+      className={className}
+    />
+  )
+}

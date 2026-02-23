@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useCallback, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useProject, useIssues, useStatuses } from '@/hooks/use-kanban'
 import {
@@ -17,13 +17,25 @@ import { CreateIssueDialog } from '@/components/kanban/CreateIssueDialog'
 
 export default function KanbanPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { projectId = 'default' } = useParams<{ projectId: string }>()
   const { data: project, isLoading, isError } = useProject(projectId)
   const { data: issues } = useIssues(projectId)
   const { data: statuses } = useStatuses(projectId)
 
-  const { panel, isPanelOpen, width, close } = usePanelStore()
+  const { panel, isPanelOpen, width, close, openView } = usePanelStore()
   const isMobile = useIsMobile()
+
+  const handleCardClick = useCallback(
+    (issue: Parameters<typeof openView>[0]) => {
+      if (isMobile) {
+        navigate(`/projects/${projectId}/issues/${issue.id}`)
+      } else {
+        openView(issue)
+      }
+    },
+    [isMobile, navigate, projectId, openView],
+  )
 
   if (isLoading) {
     return (
@@ -46,14 +58,14 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="flex h-dvh bg-background text-foreground">
+    <div className="flex h-dvh text-foreground animate-page-enter">
       {/* Left Sidebar — hidden on mobile */}
       {!isMobile ? <AppSidebar activeProjectId={projectId} /> : null}
 
-      {/* Main Content — inert when panel is open to trap keyboard focus */}
+      {/* Main Content — inert when panel is open on desktop */}
       <div
         className="flex flex-1 min-w-0 flex-col"
-        {...(isPanelOpen ? { inert: true } : {})}
+        {...(!isMobile && isPanelOpen ? { inert: true } : {})}
       >
         <KanbanHeader
           project={project}
@@ -66,29 +78,29 @@ export default function KanbanPage() {
 
         <div className="flex flex-1 min-h-0">
           <div className="flex-1 min-w-0 overflow-hidden">
-            <KanbanBoard projectId={projectId} />
+            <KanbanBoard projectId={projectId} onCardClick={handleCardClick} />
           </div>
         </div>
       </div>
 
-      {/* Overlay — covers entire page, click to close panel */}
-      {isPanelOpen ? (
+      {/* Overlay — covers entire page, click to close panel (desktop only) */}
+      {!isMobile && isPanelOpen ? (
         <div className="fixed inset-0 z-20 bg-black/50" onClick={close} />
       ) : null}
 
       {/* Create Issue Dialog */}
       <CreateIssueDialog />
 
-      {/* Issue Side Panel — fixed, floats above overlay; full-width on mobile */}
-      {isPanelOpen && statuses && panel.kind === 'view' ? (
+      {/* Issue Side Panel — desktop only; mobile navigates to detail page */}
+      {!isMobile && isPanelOpen && statuses && panel.kind === 'view' ? (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={t('kanban.issueDetails')}
           className="fixed inset-y-0 right-0 z-30 border-l border-border bg-card"
-          style={{ width: isMobile ? '100%' : width }}
+          style={{ width }}
         >
-          {!isMobile ? <ResizeHandle /> : null}
+          <ResizeHandle />
           <IssuePanel
             projectId={projectId}
             statuses={statuses}

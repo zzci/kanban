@@ -68,7 +68,7 @@ export function ProjectSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-lg">
         <DialogHeader>
           <div>
             <DialogTitle>{t('project.settings')}</DialogTitle>
@@ -79,7 +79,7 @@ export function ProjectSettingsDialog({
           <DialogCloseButton />
         </DialogHeader>
 
-        <div className="space-y-4 px-5 pb-5 pt-3">
+        <div className="max-h-[85dvh] overflow-y-auto space-y-4 px-5 pb-5 pt-3">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
               {t('project.name')} <span className="text-destructive">*</span>
@@ -155,7 +155,9 @@ export function ProjectSettingsDialog({
             onClick={handleSave}
             disabled={updateProject.isPending || !name.trim() || !hasChanges}
           >
-            {updateProject.isPending ? t('project.saving') : t('project.saveChanges')}
+            {updateProject.isPending
+              ? t('project.saving')
+              : t('project.saveChanges')}
           </Button>
         </div>
       </DialogContent>
