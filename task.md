@@ -1,6 +1,6 @@
 # Kanban App — Task List
 
-> Updated: 2026-02-23 15:00
+> Updated: 2026-02-23 17:30
 
 ## Usage
 
@@ -291,3 +291,21 @@
 
 - [x] **CLEAN-003 Fix board-store magic timeout and wire ChatInput** `P3`
   - description: board-store uses arbitrary 500ms `setTimeout` to reset `isDragging` — should be tied to mutation `onSettled`. ChatInput send button has no `onClick` handler (stub). Fix: reset isDragging in `onSettled` callback, either wire send handler or visually mark chat as "coming soon". Location: `frontend/src/stores/board-store.ts:59`, `frontend/src/components/issue-detail/ChatInput.tsx:191`.
+
+- [x] **DATA-001 Keep only default project in seed data** `P1`
+  - description: Remove the `frontend`, `backend`, and `mobile` projects and all their associated issues from seed data. Keep only the `default` (My Project) project with its issues. Update `SEED_PROJECTS` array and `ISSUE_SEEDS` record in `app/db/seed-data.ts`. Verify memory-store initialization still works correctly with only one project.
+  - activeForm: Removing extra seed projects
+  - createdAt: 2026-02-23 17:00
+  - owner: main
+
+- [x] **ARCH-004 Implement mock data middleware for future DB migration** `P1`
+  - description: Create `app/mock/index.ts` as a Hono sub-app that mounts all data CRUD routes (projects, issues, statuses, tags, issue-tags). Move data route mounts from `app/routes/api.ts` into the mock module. Mount the mock middleware in `app/app.ts` with a clear toggle so it can be removed when real DB routes are ready. `app/routes/api.ts` keeps only non-data routes (health, runtime, filesystem). This separates mock data layer from the API infrastructure, making DB migration a clean swap.
+  - activeForm: Implementing mock data middleware
+  - createdAt: 2026-02-23 17:30
+  - owner: main
+
+- [x] **DB-001 Migrate projects to real SQLite/Drizzle database** `P1`
+  - description: Add `projects` table to Drizzle schema, generate migration, rewrite `routes/projects.ts` to use Drizzle instead of memory-store, seed default project on startup, update mock middleware to only intercept default project sub-resources (issues/statuses/tags). New projects go directly to DB.
+  - activeForm: Migrating projects to SQLite
+  - createdAt: 2026-02-23 18:30
+  - owner: main

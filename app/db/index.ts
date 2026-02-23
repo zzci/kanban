@@ -8,14 +8,10 @@ import { migrate } from 'drizzle-orm/bun-sqlite/migrator'
 import * as schema from './schema'
 
 const moduleDir
-  = typeof import.meta.dir === 'string'
-    ? import.meta.dir
-    : dirname(fileURLToPath(import.meta.url))
+  = typeof import.meta.dir === 'string' ? import.meta.dir : dirname(fileURLToPath(import.meta.url))
 
 const rawDbPath = process.env.DB_PATH || 'data/kanban.db'
-const dbPath = rawDbPath.startsWith('/')
-  ? rawDbPath
-  : resolve(moduleDir, '../../', rawDbPath)
+const dbPath = rawDbPath.startsWith('/') ? rawDbPath : resolve(moduleDir, '../../', rawDbPath)
 
 const dir = dirname(dbPath)
 if (!existsSync(dir)) {
@@ -42,6 +38,13 @@ catch (err: any) {
     throw err
   }
 }
+
+// Seed default project after migration
+import('./seed')
+  .then(m => m.seedDefaultProject())
+  .catch((err) => {
+    console.error('Failed to seed default project:', err)
+  })
 
 export async function checkDbHealth() {
   // Use native sqlite check for predictable health signal in Bun runtime.

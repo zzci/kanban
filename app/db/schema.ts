@@ -15,6 +15,14 @@ export const commonFields = {
   isDeleted: integer('is_deleted').notNull().default(0),
 }
 
+export const projects = sqliteTable('projects', {
+  name: text('name').notNull(),
+  description: text('description'),
+  directory: text('directory'),
+  repositoryUrl: text('repository_url'),
+  ...commonFields,
+})
+
 export const runtimeEvents = sqliteTable('runtime_events', {
   event: text('event').notNull(),
   ...commonFields,

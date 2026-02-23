@@ -1,7 +1,9 @@
 import { zValidator } from '@hono/zod-validator'
+import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { createProject, getProject, getProjects, updateProject } from '../db/memory-store'
+import { db } from '../db'
+import { projects as projectsTable } from '../db/schema'
 
 const createProjectSchema = z.object({
   name: z.string().min(1).max(200),
@@ -17,49 +19,104 @@ const updateProjectSchema = z.object({
   repositoryUrl: z.string().url().optional().or(z.literal('')),
 })
 
+type ProjectRow = typeof projectsTable.$inferSelect
+
+function serializeProject(row: ProjectRow) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? undefined,
+    directory: row.directory ?? undefined,
+    repositoryUrl: row.repositoryUrl ?? undefined,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  }
+}
+
 const projects = new Hono()
 
-projects.get('/', (c) => {
-  return c.json({ success: true, data: getProjects() })
+projects.get('/', async (c) => {
+  const rows = await db
+    .select()
+    .from(projectsTable)
+    .where(eq(projectsTable.isDeleted, 0))
+  return c.json({ success: true, data: rows.map(serializeProject) })
 })
 
 projects.post('/', zValidator('json', createProjectSchema, (result, c) => {
   if (!result.success) {
     return c.json({ success: false, error: result.error.issues.map(i => i.message).join(', ') }, 400)
   }
-}), (c) => {
+}), async (c) => {
   const body = c.req.valid('json')
-  const project = createProject({
+  const [row] = await db.insert(projectsTable).values({
     name: body.name,
-    description: body.description,
-    directory: body.directory,
-    repositoryUrl: body.repositoryUrl || undefined,
-  })
-  return c.json({ success: true, data: project }, 201)
+    description: body.description ?? null,
+    directory: body.directory ?? null,
+    repositoryUrl: body.repositoryUrl || null,
+  }).returning()
+  return c.json({ success: true, data: serializeProject(row!) }, 201)
 })
 
-projects.get('/:projectId', (c) => {
-  const project = getProject(c.req.param('projectId'))
-  if (!project) {
+projects.get('/:projectId', async (c) => {
+  const [row] = await db
+    .select()
+    .from(projectsTable)
+    .where(and(
+      eq(projectsTable.id, c.req.param('projectId')),
+      eq(projectsTable.isDeleted, 0),
+    ))
+  if (!row) {
     return c.json({ success: false, error: 'Project not found' }, 404)
   }
-  return c.json({ success: true, data: project })
+  return c.json({ success: true, data: serializeProject(row) })
 })
 
 projects.patch('/:projectId', zValidator('json', updateProjectSchema, (result, c) => {
   if (!result.success) {
     return c.json({ success: false, error: result.error.issues.map(i => i.message).join(', ') }, 400)
   }
-}), (c) => {
+}), async (c) => {
   const body = c.req.valid('json')
-  const updated = updateProject(c.req.param('projectId'), {
-    ...body,
-    repositoryUrl: body.repositoryUrl === '' ? undefined : body.repositoryUrl,
-  })
-  if (!updated) {
+  const projectId = c.req.param('projectId')
+
+  const updates: Record<string, unknown> = {}
+  if (body.name !== undefined)
+    updates.name = body.name
+  if (body.description !== undefined)
+    updates.description = body.description
+  if (body.directory !== undefined)
+    updates.directory = body.directory
+  if (body.repositoryUrl !== undefined) {
+    updates.repositoryUrl = body.repositoryUrl === '' ? null : body.repositoryUrl
+  }
+
+  if (Object.keys(updates).length === 0) {
+    const [existing] = await db
+      .select()
+      .from(projectsTable)
+      .where(and(
+        eq(projectsTable.id, projectId),
+        eq(projectsTable.isDeleted, 0),
+      ))
+    if (!existing) {
+      return c.json({ success: false, error: 'Project not found' }, 404)
+    }
+    return c.json({ success: true, data: serializeProject(existing) })
+  }
+
+  const [row] = await db
+    .update(projectsTable)
+    .set(updates)
+    .where(and(
+      eq(projectsTable.id, projectId),
+      eq(projectsTable.isDeleted, 0),
+    ))
+    .returning()
+  if (!row) {
     return c.json({ success: false, error: 'Project not found' }, 404)
   }
-  return c.json({ success: true, data: updated })
+  return c.json({ success: true, data: serializeProject(row) })
 })
 
 export default projects

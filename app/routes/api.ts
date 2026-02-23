@@ -1,20 +1,15 @@
 import { Hono } from 'hono'
 import { checkDbHealth } from '../db'
 import filesystem from './filesystem'
-import issues from './issues'
 import projects from './projects'
-import statuses from './statuses'
-import tags, { issueTagRoutes } from './tags'
 
 const apiRoutes = new Hono()
 
-// Kanban routes
-apiRoutes.route('/filesystem', filesystem)
+// Real DB-backed routes
 apiRoutes.route('/projects', projects)
-apiRoutes.route('/projects/:projectId/statuses', statuses)
-apiRoutes.route('/projects/:projectId/issues', issues)
-apiRoutes.route('/projects/:projectId/tags', tags)
-apiRoutes.route('/projects/:projectId/issues/:issueId/tags', issueTagRoutes)
+
+// Infrastructure routes
+apiRoutes.route('/filesystem', filesystem)
 
 function detectRuntime() {
   const hasBunGlobal = typeof Bun !== 'undefined'

@@ -3,6 +3,7 @@ import { compress } from 'hono/compress'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 import { logger } from './logger'
+import mockDataMiddleware from './mock'
 import { agentRoutes, apiRoutes, sessionRoutes } from './routes'
 
 const app = new Hono()
@@ -89,6 +90,10 @@ setInterval(() => {
 }, 5 * 60_000)
 
 // --- Routes ---
+// Mock data middleware — intercepts all data CRUD routes (projects, issues, statuses, tags)
+// using in-memory store. Remove this line and mount DB-backed routes when database is ready.
+app.route('/api', mockDataMiddleware)
+
 app.route('/api', apiRoutes)
 app.route('/api/agents', agentRoutes)
 app.route('/api/projects/:projectId/sessions', sessionRoutes)
