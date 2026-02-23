@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import {
-  FolderKanban,
   Globe,
   Plus,
   Hash,
@@ -20,11 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTheme } from '@/hooks/use-theme'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -114,11 +109,7 @@ function ProjectCard({
 
 /* ── Mobile menu sheet (right-side) ─────────────────── */
 
-function MobileHomeMenu({
-  onCreateProject,
-}: {
-  onCreateProject: () => void
-}) {
+function MobileHomeMenu({ onCreateProject }: { onCreateProject: () => void }) {
   const { t, i18n } = useTranslation()
   const { resolved, toggle } = useTheme()
   const [open, setOpen] = useState(false)
@@ -147,12 +138,8 @@ function MobileHomeMenu({
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <FolderKanban className="h-4 w-4" />
-              </div>
-              <span className="text-sm font-semibold">
-                {t('sidebar.menu')}
-              </span>
+              <img src="/favicon.svg" alt="Kanban" className="h-8 w-8" />
+              <span className="text-sm font-semibold">{t('sidebar.menu')}</span>
             </div>
 
             {/* Actions */}
@@ -279,9 +266,7 @@ function DesktopHeaderControls({
                   setLangOpen(false)
                 }}
                 className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent ${
-                  lang.id === i18n.language
-                    ? 'bg-accent/50 font-medium'
-                    : ''
+                  lang.id === i18n.language ? 'bg-accent/50 font-medium' : ''
                 }`}
               >
                 {lang.label}
@@ -307,11 +292,7 @@ function DesktopHeaderControls({
           <Moon className="h-4 w-4" />
         )}
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onCreateProject}
-      >
+      <Button variant="outline" size="sm" onClick={onCreateProject}>
         <Plus className="h-4 w-4" />
         {t('project.newProject')}
       </Button>
@@ -340,9 +321,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-12">
         {/* Header row — always horizontal */}
         <div className="mb-6 flex items-center gap-3 md:mb-8">
-          <span className="rounded-xl bg-primary/15 p-2 text-primary">
-            <FolderKanban className="h-5 w-5" />
-          </span>
+          <img src="/favicon.svg" alt="Kanban" className="h-9 w-9" />
           <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
             {t('project.projects')}
           </h1>
@@ -355,9 +334,7 @@ export default function HomePage() {
           {/* Mobile: right-side menu sheet */}
           {isMobile ? (
             <div className="ml-auto">
-              <MobileHomeMenu
-                onCreateProject={() => setShowCreate(true)}
-              />
+              <MobileHomeMenu onCreateProject={() => setShowCreate(true)} />
             </div>
           ) : (
             <DesktopHeaderControls

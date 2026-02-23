@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { Globe, LayoutGrid, Moon, Plus, Settings, Sun } from 'lucide-react'
+import { Globe, Moon, Plus, Settings, Sun } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '@/types/kanban'
@@ -104,16 +104,15 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
   return (
     <div className="flex flex-col items-center h-full w-14 py-3 gap-1 bg-sidebar border-r border-sidebar-border shrink-0">
       {/* Home */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 text-muted-foreground"
+      <button
+        type="button"
+        className="flex items-center justify-center w-9 h-9 rounded-lg cursor-pointer focus:outline-none"
         aria-label={t('sidebar.home')}
         title={t('sidebar.home')}
         onClick={() => navigate('/')}
       >
-        <LayoutGrid className="h-4.5 w-4.5" />
-      </Button>
+        <img src="/favicon.svg" alt="Home" className="h-9 w-9" />
+      </button>
 
       <Separator className="mx-2 my-1 w-8" />
 

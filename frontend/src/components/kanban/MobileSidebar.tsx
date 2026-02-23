@@ -1,6 +1,5 @@
 import {
   Globe,
-  LayoutGrid,
   Menu,
   Moon,
   Plus,
@@ -16,11 +15,7 @@ import { useProjects } from '@/hooks/use-kanban'
 import { useTheme } from '@/hooks/use-theme'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 
 const LANGUAGES = [
@@ -103,9 +98,7 @@ export function MobileSidebar({
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <LayoutGrid className="h-4 w-4" />
-              </div>
+              <img src="/favicon.svg" alt="Kanban" className="h-8 w-8" />
               <span className="text-sm font-semibold">Kanban</span>
             </div>
 
@@ -118,7 +111,7 @@ export function MobileSidebar({
               }}
               className="flex items-center gap-3 px-4 min-h-[44px] text-sm text-foreground/80 hover:bg-accent/50 active:bg-accent transition-colors"
             >
-              <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+              <img src="/favicon.svg" alt="Home" className="h-5 w-5" />
               {t('sidebar.home')}
             </button>
 
