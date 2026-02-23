@@ -128,8 +128,8 @@ export default function HomePage() {
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="bg-card/30 animate-pulse min-h-[140px]">
                 <CardHeader>
                   <div className="flex items-start gap-3">
@@ -147,7 +147,7 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projects?.map((project, index) => (
               <ProjectCard
                 key={project.id}
