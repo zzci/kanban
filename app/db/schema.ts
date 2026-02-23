@@ -17,6 +17,7 @@ export const commonFields = {
 
 export const projects = sqliteTable('projects', {
   name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
   description: text('description'),
   directory: text('directory'),
   repositoryUrl: text('repository_url'),

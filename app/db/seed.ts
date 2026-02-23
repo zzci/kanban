@@ -8,6 +8,7 @@ export async function seedDefaultProject() {
     await db.insert(projects).values({
       id: 'default',
       name: 'My Project',
+      slug: 'default',
     })
   }
 }

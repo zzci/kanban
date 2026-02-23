@@ -2,6 +2,7 @@ export type Priority = 'urgent' | 'high' | 'medium' | 'low'
 
 export type Project = {
   id: string
+  slug: string
   name: string
   description?: string
   directory?: string

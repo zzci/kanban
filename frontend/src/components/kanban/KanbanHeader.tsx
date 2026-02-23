@@ -65,7 +65,7 @@ export function KanbanHeader({
               type="button"
               onClick={() => {
                 setMode('kanban')
-                navigate(`/projects/${project.id}`)
+                navigate(`/projects/${project.slug}`)
               }}
               className={cn(
                 'rounded-sm px-2 py-1 text-xs transition-colors',
@@ -81,7 +81,7 @@ export function KanbanHeader({
               type="button"
               onClick={() => {
                 setMode('list')
-                navigate(`/projects/${project.id}/issues`)
+                navigate(`/projects/${project.slug}/issues`)
               }}
               className={cn(
                 'rounded-sm px-2 py-1 text-xs transition-colors',

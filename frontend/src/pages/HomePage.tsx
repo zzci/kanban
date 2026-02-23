@@ -237,9 +237,7 @@ function DesktopHeaderControls({
         >
           <ViewIcon className="h-4 w-4" />
           <span className="text-xs">
-            {mode === 'kanban'
-              ? t('viewMode.kanban')
-              : t('viewMode.list')}
+            {mode === 'kanban' ? t('viewMode.kanban') : t('viewMode.list')}
           </span>
         </Button>
         {viewOpen ? (
@@ -342,14 +340,14 @@ export default function HomePage() {
 
   // Mobile always uses list mode
   const projectPath = useCallback(
-    (projectId: string) =>
-      isMobile ? `/projects/${projectId}/issues` : globalProjectPath(projectId),
+    (slug: string) =>
+      isMobile ? `/projects/${slug}/issues` : globalProjectPath(slug),
     [isMobile, globalProjectPath],
   )
 
   const handleProjectCreated = useCallback(
     (project: Project) => {
-      navigate(projectPath(project.id))
+      navigate(projectPath(project.slug))
     },
     [navigate, projectPath],
   )
@@ -410,7 +408,7 @@ export default function HomePage() {
               >
                 <ProjectCard
                   project={project}
-                  onClick={() => navigate(projectPath(project.id))}
+                  onClick={() => navigate(projectPath(project.slug))}
                 />
               </div>
             ))}

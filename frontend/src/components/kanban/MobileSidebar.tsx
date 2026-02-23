@@ -59,7 +59,7 @@ export function MobileSidebar({
     (project: Project) => {
       setShowCreate(false)
       setOpen(false)
-      navigate(mobileProjectPath(project.id))
+      navigate(mobileProjectPath(project.slug))
     },
     [navigate, mobileProjectPath],
   )
@@ -103,14 +103,14 @@ export function MobileSidebar({
               style={{ scrollbarWidth: 'none' }}
             >
               {projects?.map((project) => {
-                const isActive = activeProjectId === project.id
+                const isActive = activeProjectId === project.slug
                 return (
                   <button
                     key={project.id}
                     type="button"
                     onClick={() => {
                       setOpen(false)
-                      navigate(mobileProjectPath(project.id))
+                      navigate(mobileProjectPath(project.slug))
                     }}
                     className={`flex items-center gap-3 w-full px-2 min-h-[44px] rounded-md text-left transition-colors ${
                       isActive
