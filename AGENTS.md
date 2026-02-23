@@ -49,7 +49,7 @@ bun run db:reset             # deletes SQLite DB files (data/kanban.db)
 
 The backend has two data backends — **only the in-memory store is wired up to routes currently**:
 
-- `app/db/memory-store.ts` — In-memory store with seed data for 16 demo projects (each with statuses, issues, tags). All route handlers (`app/routes/*.ts`) import from here. Data resets on server restart.
+- `app/db/memory-store.ts` — In-memory store with seed data for 4 demo projects (each with statuses, issues, tags). All route handlers (`app/routes/*.ts`) import from here. Data resets on server restart.
 - `app/db/index.ts` + `app/db/schema.ts` — SQLite/Drizzle ORM setup (exists but not used by routes yet). The `runtimeEvents` table is the only schema defined so far.
 
 When adding new features, use the memory store pattern unless migrating to persistent storage.
@@ -80,6 +80,7 @@ All API responses use the envelope `{ success: true, data: T } | { success: fals
 - **Drag & drop**: @dnd-kit/react for kanban board
 - **Dialogs**: Radix UI (`@radix-ui/react-dialog`)
 - **Icons**: lucide-react
+- **i18n**: i18next + react-i18next, Chinese (zh, default) and English (en). Translations in `frontend/src/i18n/{en,zh}.json`. Language persisted to localStorage (`i18n-lang`).
 - **Path alias**: `@/*` maps to `frontend/src/*`
 - **Dev proxy**: `@hono/vite-dev-server` proxies `/api/*` requests to the Hono app during `bun run dev`, so no separate backend process is needed for frontend dev
 
@@ -91,10 +92,21 @@ Two state systems, each with a distinct role:
 - **Zustand stores** — Local UI state only:
   - `board-store.ts` — Drag-and-drop state (`groupedItems`, `isDragging`). Syncs from server data but pauses sync while dragging.
   - `panel-store.ts` — Side panel and create dialog open/close state.
+  - `view-mode-store.ts` — Kanban/list view toggle, persisted to localStorage (`kanban-view-mode`).
+
+#### Component Areas
+
+- `components/ui/` — shadcn/ui primitives (Button, Dialog, Badge, etc.)
+- `components/kanban/` — Kanban board: columns, cards, sidebar, create issue dialog
+- `components/issue-detail/` — Issue detail page: chat area, diff panel, issue list, review dialog
 
 #### Component Styling
 
-Components use the shadcn/ui pattern: `cn()` utility (`frontend/src/lib/utils.ts`) combining `clsx` + `tailwind-merge`, with `class-variance-authority` for component variants (see `frontend/src/components/ui/`).
+Components use the shadcn/ui pattern: `cn()` utility (`frontend/src/lib/utils.ts`) combining `clsx` + `tailwind-merge`, with `class-variance-authority` for component variants.
+
+#### Theme
+
+`useTheme()` hook (`frontend/src/hooks/use-theme.ts`) — supports `light`, `dark`, `system` modes, persisted to localStorage (`kanban-theme`).
 
 #### Frontend Routes
 
@@ -123,6 +135,7 @@ Components use the shadcn/ui pattern: `cn()` utility (`frontend/src/lib/utils.ts
 - IDs use ULID (via `ulid` package), not UUID
 - Frontend types mirror backend types in `frontend/src/types/kanban.ts`
 - API client in `frontend/src/lib/kanban-api.ts` — add new endpoints here, then wrap in React Query hooks in `use-kanban.ts`
+- All user-facing strings must have i18n keys in both `en.json` and `zh.json`
 
 ## Project Task
 
