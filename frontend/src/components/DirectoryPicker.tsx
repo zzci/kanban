@@ -79,7 +79,10 @@ export function DirectoryPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent
+        className="max-w-[calc(100%-2rem)] md:max-w-md"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div>
             <DialogTitle>{t('directory.browse')}</DialogTitle>
@@ -103,7 +106,9 @@ export function DirectoryPicker({
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
-              <div className="px-3 py-4 text-center text-sm text-destructive">{error}</div>
+              <div className="px-3 py-4 text-center text-sm text-destructive">
+                {error}
+              </div>
             ) : (
               <div className="divide-y">
                 {dirData?.parent && (

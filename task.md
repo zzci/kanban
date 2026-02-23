@@ -129,3 +129,8 @@
   - description: The app currently uses a single logo that doesn't adapt to dark theme. Add a dark-theme variant of the logo that displays automatically when dark mode is active. Use CSS media query, class-based switching, or the theme context to swap between light and dark logo assets.
   - activeForm: Adding dark theme logo
   - createdAt: 2026-02-23 06:00
+
+- [x] **BUG-005 Mobile: create project modal too large** `P1`
+  - description: On mobile, the create project modal is too large and overflows the viewport. Apply the same responsive sizing used in BUG-004 for the project settings modal — add `max-w-[calc(100%-2rem)]` and ensure content is scrollable on small screens.
+  - activeForm: Resizing create project modal for mobile
+  - createdAt: 2026-02-23 07:00

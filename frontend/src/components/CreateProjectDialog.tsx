@@ -69,7 +69,7 @@ export function CreateProjectDialog({
         if (!v) reset()
       }}
     >
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-lg">
         <DialogHeader>
           <div>
             <DialogTitle>{t('project.create')}</DialogTitle>
@@ -79,7 +79,7 @@ export function CreateProjectDialog({
           </div>
           <DialogCloseButton />
         </DialogHeader>
-        <div className="space-y-4 px-5 pb-5 pt-3">
+        <div className="max-h-[85dvh] overflow-y-auto space-y-4 px-5 pb-5 pt-3">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
               {t('project.name')} <span className="text-destructive">*</span>
@@ -155,7 +155,9 @@ export function CreateProjectDialog({
             onClick={handleSubmit}
             disabled={createProject.isPending || !name.trim()}
           >
-            {createProject.isPending ? t('project.creating') : t('project.createButton')}
+            {createProject.isPending
+              ? t('project.creating')
+              : t('project.createButton')}
           </Button>
         </div>
       </DialogContent>
