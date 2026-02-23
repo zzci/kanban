@@ -45,7 +45,7 @@ sessions.post(
   zValidator('json', createSessionSchema, (result, c) => {
     if (!result.success) {
       return c.json(
-        { success: false, error: result.error.issues.map((i) => i.message).join(', ') },
+        { success: false, error: result.error.issues.map(i => i.message).join(', ') },
         400,
       )
     }
@@ -94,7 +94,8 @@ sessions.post('/:id/execute', async (c) => {
       success: true,
       data: { executionId: result.executionId, sessionId: id },
     })
-  } catch (error) {
+  }
+  catch (error) {
     return c.json(
       {
         success: false,
@@ -111,7 +112,7 @@ sessions.post(
   zValidator('json', followUpSchema, (result, c) => {
     if (!result.success) {
       return c.json(
-        { success: false, error: result.error.issues.map((i) => i.message).join(', ') },
+        { success: false, error: result.error.issues.map(i => i.message).join(', ') },
         400,
       )
     }
@@ -126,7 +127,8 @@ sessions.post(
         success: true,
         data: { executionId: result.executionId, sessionId: id },
       })
-    } catch (error) {
+    }
+    catch (error) {
       return c.json(
         {
           success: false,
@@ -144,7 +146,8 @@ sessions.post('/:id/cancel', async (c) => {
   try {
     await sessionManager.cancelSession(id)
     return c.json({ success: true, data: { sessionId: id, status: 'cancelled' } })
-  } catch (error) {
+  }
+  catch (error) {
     return c.json(
       {
         success: false,
@@ -165,7 +168,7 @@ sessions.get('/:id/logs', (c) => {
 
   // Get all execution processes for this session and their logs
   const processes = getExecutionProcessesBySession(id)
-  const logs = processes.flatMap((p) => sessionManager.getSessionLogs(p.id))
+  const logs = processes.flatMap(p => sessionManager.getSessionLogs(p.id))
 
   return c.json({ success: true, data: { session, logs } })
 })
