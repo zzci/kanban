@@ -160,6 +160,7 @@ export interface ExecutionEnv {
 // Agent session (runtime state)
 export interface AgentSession {
   id: string
+  name: string
   projectId: string
   issueId?: string
   agentType: AgentType

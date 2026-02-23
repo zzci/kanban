@@ -119,6 +119,28 @@
     "closeDiffPanel": "Close diff panel",
     "noChanges": "No changes to display"
   },
+  "session": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "sending": "Sending...",
+    "starting": "Starting...",
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "tool": {
+      "fileRead": "Read file",
+      "fileEdit": "Edit file",
+      "commandRun": "Run command",
+      "search": "Search",
+      "webFetch": "Fetch URL"
+    },
+    "noActiveSession": "Start a review to begin an agent session",
+    "noSession": "No session"
+  },
   "review": {
     "startReview": "Start Review",
     "reviewDescription": "Request a coding agent to review your changes and provide feedback.",
@@ -126,7 +148,8 @@
     "instructionsPlaceholder": "Add any specific instructions for the review...",
     "includeGitContext": "Include Git context",
     "includeGitDescription": "Tell the agent how to see all changes on this branch",
-    "newSession": "New session"
+    "newSession": "New session",
+    "defaultPrompt": "Review this issue and implement the requirements."
   },
   "directory": {
     "browse": "Browse Directory",

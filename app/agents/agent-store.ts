@@ -13,6 +13,10 @@ export function getAgentSessionsByProject(projectId: string): AgentSession[] {
   return agentSessions.filter(s => s.projectId === projectId)
 }
 
+export function getAgentSessionsByIssue(projectId: string, issueId: string): AgentSession[] {
+  return agentSessions.filter(s => s.projectId === projectId && s.issueId === issueId)
+}
+
 export function getAgentSession(id: string): AgentSession | undefined {
   return agentSessions.find(s => s.id === id)
 }
@@ -22,11 +26,23 @@ export function createAgentSession(data: {
   issueId?: string
   agentType: AgentType
   prompt: string
+  name?: string
   workingDir?: string
   model?: string
 }): AgentSession {
+  // Auto-generate name if not provided: "Session #N" based on issue session count
+  let name = data.name
+  if (!name) {
+    const count = data.issueId
+      ? agentSessions.filter(s => s.projectId === data.projectId && s.issueId === data.issueId)
+        .length
+      : agentSessions.filter(s => s.projectId === data.projectId).length
+    name = `Session #${count + 1}`
+  }
+
   const session: AgentSession = {
     id: ulid(),
+    name,
     projectId: data.projectId,
     issueId: data.issueId,
     agentType: data.agentType,

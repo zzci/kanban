@@ -1,15 +1,34 @@
 import { useRef, useState, useCallback } from 'react'
-import { FileText, ImageIcon, Paperclip, X } from 'lucide-react'
+import {
+  ChevronDown,
+  FileText,
+  ImageIcon,
+  Loader2,
+  Paperclip,
+  X,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { FilePreviewDialog } from '@/components/FilePreviewDialog'
 import { fileContentHash } from '@/lib/file-hash'
 import { useClickOutside } from '@/hooks/use-click-outside'
+import { useFollowUpSession } from '@/hooks/use-kanban'
+import type { AgentSession, SessionStatus } from '@/types/kanban'
 
 export function ChatInput({
+  projectId,
+  activeSessionId = null,
+  sessionStatus = null,
+  sessions = [],
+  onSessionSwitch,
   diffOpen,
   onToggleDiff,
   scrollRef,
 }: {
+  projectId?: string
+  activeSessionId?: string | null
+  sessionStatus?: SessionStatus | null
+  sessions?: AgentSession[]
+  onSessionSwitch?: (sessionId: string) => void
   diffOpen?: boolean
   onToggleDiff?: () => void
   scrollRef?: React.RefObject<HTMLDivElement | null>
@@ -20,6 +39,36 @@ export function ChatInput({
   const [previewFile, setPreviewFile] = useState<File | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const followUp = useFollowUpSession(projectId ?? '')
+
+  const canSend =
+    input.trim().length > 0 &&
+    !!activeSessionId &&
+    !!projectId &&
+    (sessionStatus === 'completed' || sessionStatus === 'failed')
+
+  const handleSend = async () => {
+    if (!canSend || !activeSessionId) return
+    const prompt = input.trim()
+    setInput('')
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+    try {
+      await followUp.mutateAsync({ sessionId: activeSessionId, prompt })
+    } catch {
+      // Error handled by React Query
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault()
+      handleSend()
+    }
+  }
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -90,7 +139,7 @@ export function ChatInput({
     <div className="shrink-0 w-full min-w-0 px-3 pb-3 pt-1">
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         {/* Status bar */}
-        <div className="flex items-center px-3 py-1.5 border-b border-border/40">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/40">
           <button
             type="button"
             onClick={onToggleDiff}
@@ -104,6 +153,14 @@ export function ChatInput({
             <span className="text-emerald-500 font-medium">+0</span>
             <span className="text-red-500 font-medium">-0</span>
           </button>
+
+          {sessions.length > 0 ? (
+            <SessionSelector
+              sessions={sessions}
+              activeSessionId={activeSessionId}
+              onSwitch={onSessionSwitch}
+            />
+          ) : null}
         </div>
 
         {/* Textarea */}
@@ -113,6 +170,7 @@ export function ChatInput({
             value={input}
             onChange={handleInput}
             onPaste={handlePaste}
+            onKeyDown={handleKeyDown}
             onFocus={() => {
               // Scroll chat to bottom when keyboard opens on mobile
               setTimeout(() => {
@@ -189,16 +247,94 @@ export function ChatInput({
             </button>
           </div>
 
-          {/* TODO: Wire up send handler when chat API is implemented */}
           <button
             type="button"
-            disabled={!input.trim()}
-            className="rounded-lg bg-foreground px-3.5 py-1 text-sm font-medium text-background transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-not-allowed opacity-50"
+            disabled={!canSend || followUp.isPending}
+            onClick={handleSend}
+            className="rounded-lg bg-foreground px-3.5 py-1 text-sm font-medium text-background transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {t('chat.send')}
+            {followUp.isPending ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t('session.sending')}
+              </span>
+            ) : (
+              t('chat.send')
+            )}
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-muted-foreground/40',
+  running: 'bg-blue-500',
+  completed: 'bg-green-500',
+  failed: 'bg-red-500',
+  cancelled: 'bg-muted-foreground/30',
+}
+
+function SessionSelector({
+  sessions,
+  activeSessionId,
+  onSwitch,
+}: {
+  sessions: AgentSession[]
+  activeSessionId: string | null
+  onSwitch?: (sessionId: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useClickOutside(ref, open, () => setOpen(false))
+
+  const active = sessions.find((s) => s.id === activeSessionId)
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs bg-muted/60 hover:bg-muted transition-colors max-w-[180px]"
+      >
+        {active ? (
+          <>
+            <span
+              className={`h-1.5 w-1.5 rounded-full shrink-0 ${STATUS_COLORS[active.status] ?? ''}`}
+            />
+            <span className="truncate">{active.name}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">No session</span>
+        )}
+        <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+      </button>
+      {open ? (
+        <div className="absolute left-0 bottom-full mb-1 z-50 w-56 rounded-md border bg-popover py-1 shadow-lg">
+          {sessions.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => {
+                onSwitch?.(s.id)
+                setOpen(false)
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors hover:bg-accent ${
+                s.id === activeSessionId ? 'bg-accent/50' : ''
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full shrink-0 ${STATUS_COLORS[s.status] ?? ''}`}
+              />
+              <span className="truncate font-medium">{s.name}</span>
+              <span className="ml-auto text-[10px] text-muted-foreground shrink-0">
+                {s.agentType}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

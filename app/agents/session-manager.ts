@@ -31,6 +31,7 @@ export class SessionManager {
     issueId?: string
     agentType: AgentType
     prompt: string
+    name?: string
     workingDir?: string
     model?: string
   }): AgentSession {

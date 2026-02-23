@@ -1,17 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { IssueWithTags } from '@/types/kanban'
+import type { CreateSessionRequest, IssueWithTags } from '@/types/kanban'
 import { kanbanApi } from '@/lib/kanban-api'
 import { useBoardStore } from '@/stores/board-store'
 
 export const queryKeys = {
   projects: () => ['projects'] as const,
   project: (id: string) => ['projects', id] as const,
-  statuses: (projectId: string) =>
-    ['projects', projectId, 'statuses'] as const,
+  statuses: (projectId: string) => ['projects', projectId, 'statuses'] as const,
   issues: (projectId: string) => ['projects', projectId, 'issues'] as const,
   issue: (projectId: string, issueId: string) =>
     ['projects', projectId, 'issues', issueId] as const,
   tags: (projectId: string) => ['projects', projectId, 'tags'] as const,
+  sessions: (projectId: string) => ['projects', projectId, 'sessions'] as const,
+  sessionsByIssue: (projectId: string, issueId: string) =>
+    ['projects', projectId, 'sessions', 'issue', issueId] as const,
+  session: (projectId: string, sessionId: string) =>
+    ['projects', projectId, 'sessions', sessionId] as const,
+  sessionLogs: (projectId: string, sessionId: string) =>
+    ['projects', projectId, 'sessions', sessionId, 'logs'] as const,
 }
 
 export function useProjects() {
@@ -176,6 +182,80 @@ export function useDeleteTag(projectId: string) {
     mutationFn: (tagId: string) => kanbanApi.deleteTag(projectId, tagId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tags(projectId) })
+    },
+  })
+}
+
+// --- Session hooks ---
+
+export function useSessionsByIssue(projectId: string, issueId: string) {
+  return useQuery({
+    queryKey: queryKeys.sessionsByIssue(projectId, issueId),
+    queryFn: () => kanbanApi.getSessionsByIssue(projectId, issueId),
+    enabled: !!projectId && !!issueId,
+  })
+}
+
+export function useSession(projectId: string, sessionId: string) {
+  return useQuery({
+    queryKey: queryKeys.session(projectId, sessionId),
+    queryFn: () => kanbanApi.getSession(projectId, sessionId),
+    enabled: !!projectId && !!sessionId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      return status === 'running' || status === 'pending' ? 2000 : false
+    },
+  })
+}
+
+export function useCreateSession(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: CreateSessionRequest) =>
+      kanbanApi.createSession(projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sessions(projectId),
+      })
+    },
+  })
+}
+
+export function useExecuteSession(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      kanbanApi.executeSession(projectId, sessionId),
+    onSuccess: (_data, sessionId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session(projectId, sessionId),
+      })
+    },
+  })
+}
+
+export function useFollowUpSession(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (args: { sessionId: string; prompt: string }) =>
+      kanbanApi.followUpSession(projectId, args.sessionId, args.prompt),
+    onSuccess: (_data, args) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session(projectId, args.sessionId),
+      })
+    },
+  })
+}
+
+export function useCancelSession(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      kanbanApi.cancelSession(projectId, sessionId),
+    onSuccess: (_data, sessionId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session(projectId, sessionId),
+      })
     },
   })
 }

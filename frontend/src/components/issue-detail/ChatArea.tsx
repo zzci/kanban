@@ -1,13 +1,21 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Play, Link, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useIssue, useStatuses } from '@/hooks/use-kanban'
+import {
+  useIssue,
+  useSession,
+  useSessionsByIssue,
+  useStatuses,
+} from '@/hooks/use-kanban'
+import { useSessionStream } from '@/hooks/use-session-stream'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useSessionStore } from '@/stores/session-store'
 import { IssueDetail } from './IssueDetail'
 import { ChatInput } from './ChatInput'
 import { DiffPanel } from './DiffPanel'
 import { ReviewDialog } from './ReviewDialog'
+import { SessionMessages } from './SessionMessages'
 import { Button } from '@/components/ui/button'
 
 export function ChatArea({
@@ -37,6 +45,44 @@ export function ChatArea({
   const [showReview, setShowReview] = useState(false)
   const [copied, setCopied] = useState(false)
   const isMobile = useIsMobile()
+
+  // Session state
+  const activeSessionId = useSessionStore((s) => s.getActiveSession(issueId))
+  const setActiveSession = useSessionStore((s) => s.setActiveSession)
+
+  const {
+    logs,
+    status: streamStatus,
+    isConnected,
+    error: streamError,
+    clearLogs,
+  } = useSessionStream({
+    projectId,
+    sessionId: activeSessionId,
+    enabled: !!activeSessionId,
+  })
+
+  const { data: session } = useSession(projectId, activeSessionId ?? '')
+  const sessionStatus = streamStatus ?? session?.status ?? null
+
+  // Auto-load latest session on mount
+  const { data: issueSessions } = useSessionsByIssue(projectId, issueId)
+  useEffect(() => {
+    if (!activeSessionId && issueSessions?.length) {
+      const latest = issueSessions[issueSessions.length - 1]
+      setActiveSession(issueId, latest.id)
+    }
+  }, [issueSessions, activeSessionId, issueId, setActiveSession])
+
+  const handleSessionCreated = (sessionId: string) => {
+    clearLogs()
+    setActiveSession(issueId, sessionId)
+  }
+
+  const handleSessionSwitch = (sessionId: string) => {
+    clearLogs()
+    setActiveSession(issueId, sessionId)
+  }
 
   if (isLoading) {
     return (
@@ -136,11 +182,23 @@ export function ChatArea({
               issue={issue}
               status={statuses?.find((s) => s.id === issue.statusId)}
             />
+            <SessionMessages
+              logs={logs}
+              status={sessionStatus}
+              isConnected={isConnected}
+              error={streamError}
+              scrollRef={scrollRef}
+            />
           </div>
         </div>
 
         {/* Input */}
         <ChatInput
+          projectId={projectId}
+          activeSessionId={activeSessionId}
+          sessionStatus={sessionStatus}
+          sessions={issueSessions ?? []}
+          onSessionSwitch={handleSessionSwitch}
           diffOpen={showDiff}
           onToggleDiff={onToggleDiff}
           scrollRef={scrollRef}
@@ -168,7 +226,13 @@ export function ChatArea({
       ) : null}
 
       {/* Review dialog */}
-      <ReviewDialog open={showReview} onOpenChange={setShowReview} />
+      <ReviewDialog
+        projectId={projectId}
+        issueId={issueId}
+        open={showReview}
+        onOpenChange={setShowReview}
+        onSessionCreated={handleSessionCreated}
+      />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronDown, Container, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, Container, Loader2, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
   Dialog,
@@ -9,11 +9,14 @@ import {
   DialogCloseButton,
 } from '@/components/ui/dialog'
 import { useClickOutside } from '@/hooks/use-click-outside'
+import { useCreateSession, useExecuteSession } from '@/hooks/use-kanban'
+import type { AgentType } from '@/types/kanban'
 
-const AGENTS = [
-  { id: 'claude_code', label: 'CLAUDE_CODE' },
-  { id: 'custom', label: 'CUSTOM_AGENT' },
-] as const
+const AGENTS: ReadonlyArray<{ id: AgentType; label: string }> = [
+  { id: 'claude-code', label: 'Claude Code' },
+  { id: 'codex', label: 'Codex' },
+  { id: 'gemini', label: 'Gemini CLI' },
+]
 
 const CONFIGS = [
   { id: 'default', label: 'DEFAULT' },
@@ -21,7 +24,6 @@ const CONFIGS = [
   { id: 'lenient', label: 'LENIENT' },
 ] as const
 
-type AgentId = (typeof AGENTS)[number]['id']
 type ConfigId = (typeof CONFIGS)[number]['id']
 
 function SelectDropdown<T extends string>({
@@ -76,18 +78,45 @@ function SelectDropdown<T extends string>({
 }
 
 export function ReviewDialog({
+  projectId,
+  issueId,
   open,
   onOpenChange,
+  onSessionCreated,
 }: {
+  projectId: string
+  issueId: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSessionCreated: (sessionId: string) => void
 }) {
   const { t } = useTranslation()
   const [instructions, setInstructions] = useState('')
   const [includeGit, setIncludeGit] = useState(true)
   const [newSession, setNewSession] = useState(false)
-  const [agent, setAgent] = useState<AgentId>('claude_code')
+  const [agent, setAgent] = useState<AgentType>('claude-code')
   const [config, setConfig] = useState<ConfigId>('default')
+
+  const createSession = useCreateSession(projectId)
+  const executeSession = useExecuteSession(projectId)
+  const isSubmitting = createSession.isPending || executeSession.isPending
+
+  const handleStartReview = async () => {
+    const prompt = instructions.trim() || t('review.defaultPrompt')
+    try {
+      const session = await createSession.mutateAsync({
+        agentType: agent,
+        prompt,
+        issueId,
+      })
+      await executeSession.mutateAsync(session.id)
+      onSessionCreated(session.id)
+      onOpenChange(false)
+      setInstructions('')
+    } catch {
+      // Errors are handled by React Query
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -213,9 +242,18 @@ export function ReviewDialog({
 
             <button
               type="button"
-              className="rounded-md border-2 border-foreground bg-background px-4 py-1.5 text-sm font-semibold hover:bg-accent transition-colors"
+              disabled={isSubmitting}
+              onClick={handleStartReview}
+              className="rounded-md border-2 border-foreground bg-background px-4 py-1.5 text-sm font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t('review.startReview')}
+              {isSubmitting ? (
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {t('session.starting')}
+                </span>
+              ) : (
+                t('review.startReview')
+              )}
             </button>
           </div>
         </div>

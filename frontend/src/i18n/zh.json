@@ -119,6 +119,28 @@
     "closeDiffPanel": "关闭更改面板",
     "noChanges": "没有要显示的更改"
   },
+  "session": {
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "sending": "发送中...",
+    "starting": "启动中...",
+    "status": {
+      "pending": "等待中",
+      "running": "运行中",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    },
+    "tool": {
+      "fileRead": "读取文件",
+      "fileEdit": "编辑文件",
+      "commandRun": "执行命令",
+      "search": "搜索",
+      "webFetch": "获取 URL"
+    },
+    "noActiveSession": "开始审查以启动代理会话",
+    "noSession": "无会话"
+  },
   "review": {
     "startReview": "开始审查",
     "reviewDescription": "请求编码代理审查您的更改并提供反馈。",
@@ -126,7 +148,8 @@
     "instructionsPlaceholder": "为审查添加具体说明...",
     "includeGitContext": "包含 Git 上下文",
     "includeGitDescription": "告诉代理如何查看此分支上的所有更改",
-    "newSession": "新会话"
+    "newSession": "新会话",
+    "defaultPrompt": "审查此需求并实现相关功能。"
   },
   "directory": {
     "browse": "浏览目录",

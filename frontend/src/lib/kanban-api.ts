@@ -1,8 +1,12 @@
 import type {
+  AgentSession,
   ApiResponse,
+  CreateSessionRequest,
+  ExecuteSessionResponse,
   Issue,
   IssueWithTags,
   Project,
+  SessionLogsResponse,
   Status,
   Tag,
 } from '@/types/kanban'
@@ -96,4 +100,42 @@ export const kanbanApi = {
     post<Tag>(`/api/projects/${projectId}/tags`, data),
   deleteTag: (projectId: string, tagId: string) =>
     del<null>(`/api/projects/${projectId}/tags/${tagId}`),
+
+  // Sessions
+  getSessionsByProject: (projectId: string) =>
+    get<AgentSession[]>(`/api/projects/${projectId}/sessions`),
+
+  getSessionsByIssue: (projectId: string, issueId: string) =>
+    get<AgentSession[]>(
+      `/api/projects/${projectId}/sessions?issueId=${encodeURIComponent(issueId)}`,
+    ),
+
+  getSession: (projectId: string, sessionId: string) =>
+    get<AgentSession>(`/api/projects/${projectId}/sessions/${sessionId}`),
+
+  getSessionLogs: (projectId: string, sessionId: string) =>
+    get<SessionLogsResponse>(
+      `/api/projects/${projectId}/sessions/${sessionId}/logs`,
+    ),
+
+  createSession: (projectId: string, data: CreateSessionRequest) =>
+    post<AgentSession>(`/api/projects/${projectId}/sessions`, data),
+
+  executeSession: (projectId: string, sessionId: string) =>
+    post<ExecuteSessionResponse>(
+      `/api/projects/${projectId}/sessions/${sessionId}/execute`,
+      {},
+    ),
+
+  followUpSession: (projectId: string, sessionId: string, prompt: string) =>
+    post<ExecuteSessionResponse>(
+      `/api/projects/${projectId}/sessions/${sessionId}/follow-up`,
+      { prompt },
+    ),
+
+  cancelSession: (projectId: string, sessionId: string) =>
+    post<{ sessionId: string; status: string }>(
+      `/api/projects/${projectId}/sessions/${sessionId}/cancel`,
+      {},
+    ),
 }

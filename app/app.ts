@@ -11,12 +11,19 @@ const app = new Hono()
 app.use(secureHeaders())
 
 // --- CORS ---
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN ?? '*',
-}))
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGIN ?? '*',
+  }),
+)
 
-// --- Compression ---
-app.use(compress())
+// --- Compression (skip for SSE routes) ---
+app.use('*', async (c, next) => {
+  if (c.req.path.endsWith('/stream')) {
+    return next()
+  }
+  return compress()(c, next)
+})
 
 // --- SEC-001: API key authentication middleware ---
 app.use('/api/*', async (c, next) => {
@@ -53,9 +60,7 @@ const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
 const RATE_LIMIT_MAX = 10 // 10 requests per window
 
 app.use('/api/projects/:projectId/sessions/:id/execute', async (c, next) => {
-  const ip = c.req.header('x-forwarded-for')
-    ?? c.req.header('x-real-ip')
-    ?? 'unknown'
+  const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown'
 
   const now = Date.now()
   const entry = rateLimitStore.get(ip)
@@ -90,10 +95,7 @@ app.route('/api/projects/:projectId/sessions', sessionRoutes)
 
 // --- 404 handler ---
 app.all('/api/*', (c) => {
-  return c.json(
-    { success: false, error: 'Not Found' },
-    404,
-  )
+  return c.json({ success: false, error: 'Not Found' }, 404)
 })
 
 // --- API-002: Global error handler ---
