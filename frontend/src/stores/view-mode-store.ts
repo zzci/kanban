@@ -8,7 +8,7 @@ interface ViewModeStore {
   projectPath: (projectId: string) => string
 }
 
-const STORAGE_KEY = 'kanban-view-mode'
+const STORAGE_KEY = 'bitk-view-mode'
 
 function loadMode(): ViewMode {
   if (typeof window === 'undefined') return 'kanban'

@@ -8,6 +8,8 @@ export default antfu(
       'node_modules',
       'frontend/**',
       'vibe/**',
+      'drizzle/**',
+      '.github/**',
       'AGENTS.md',
       'CLAUDE.md',
       'README.md',

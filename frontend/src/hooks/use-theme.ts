@@ -2,7 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 
-const STORAGE_KEY = 'kanban-theme'
+const STORAGE_KEY = 'bitk-theme'
 
 function getStoredTheme(): Theme {
   try {

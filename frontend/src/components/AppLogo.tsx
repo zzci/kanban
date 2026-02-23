@@ -5,7 +5,7 @@ export function AppLogo({ className }: { className?: string }) {
   return (
     <img
       src={resolved === 'dark' ? '/favicon-dark.svg' : '/favicon.svg'}
-      alt="Kanban"
+      alt="BitK"
       className={className}
     />
   )

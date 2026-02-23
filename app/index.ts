@@ -50,7 +50,7 @@ const http = Bun.serve({
 logger.info('server_started', {
   host: listenHost,
   port: listenPort,
-  serverName: 'kanban-api',
+  serverName: 'bitk-api',
   version: 'dev',
 })
 

@@ -79,7 +79,7 @@ export function MobileSidebar({
           <SheetTitle className="sr-only">{t('sidebar.menu')}</SheetTitle>
 
           <div className="flex flex-col h-full">
-            {/* Header -- links to homepage (Kanban is the brand name) */}
+            {/* Header -- links to homepage (BitK is the brand name) */}
             <button
               type="button"
               onClick={() => {
@@ -89,7 +89,7 @@ export function MobileSidebar({
               className="flex items-center gap-3 px-4 py-3 border-b hover:bg-accent/50 active:bg-accent transition-colors"
             >
               <AppLogo className="h-8 w-8" />
-              <span className="text-sm font-semibold">Kanban</span>
+              <span className="text-sm font-semibold">BitK</span>
             </button>
 
             {/* Project list */}
@@ -119,7 +119,7 @@ export function MobileSidebar({
                     }`}
                   >
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[11px] font-bold ${
                         isActive
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-foreground/[0.07] text-foreground/60'
