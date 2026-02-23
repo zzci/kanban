@@ -139,3 +139,56 @@
   - description: When creating a new issue, add an option (e.g. toggle or checkbox) to specify whether a git worktree should be created for the issue. This lets users choose between working in the main repo or an isolated worktree per issue. Store the worktree preference on the issue and display it in the issue detail view.
   - activeForm: Adding worktree option to issue creation
   - createdAt: 2026-02-23 07:30
+
+- [x] **AGENT-001 Design agent system database schema** `P0`
+  - description: Extend Drizzle ORM schema (`app/db/schema.ts`) with tables for the AI agent execution system. Tables needed: `agentProfiles` (agent type, binary path, protocol, capabilities, config), `agentSessions` (project-scoped session lifecycle, status, agent profile ref), `executionProcesses` (individual process runs, pid, exit code, started/finished timestamps), `executionLogs` (normalized log entries linked to execution process). Use existing `commonFields` pattern. Generate Drizzle migration.
+  - activeForm: Designing agent database schema
+  - createdAt: 2026-02-23 09:00
+
+- [x] **AGENT-002 Define core TypeScript types and interfaces** `P0`
+  - description: Create `app/agents/types.ts` with core types: `AgentType` enum (ClaudeCode, Codex, Gemini, Cursor, Amp, Copilot, Qwen, Droid, Opencode), `AgentProtocol` enum (StreamJson, JsonRpc, Acp, ControlProtocol, HttpSdk), `AgentCapability` flags (SessionFork, SetupHelper, ContextUsage, PlanMode), `SpawnOptions` (workDir, prompt, env vars, model, permissions), `SpawnedProcess` (subprocess ref, sessionId, cancelToken), `NormalizedLogEntry` (timestamp, type, content, metadata), `ExecutorConfig` (agent type, variant, model, permissions), `AgentAvailability` (installed, version, authStatus). Follow the Rust trait patterns but adapted to TypeScript interfaces.
+  - activeForm: Defining agent type system
+  - createdAt: 2026-02-23 09:00
+  - blocked by: none
+
+- [x] **AGENT-003 Implement CLI agent discovery** `P0`
+  - description: Create `app/agents/discovery.ts` that detects which AI coding agents are installed and available. For each agent type, check binary existence (e.g. `which claude`, `npx @anthropic-ai/claude-code --version`), parse version, detect auth status (e.g. check `~/.claude.json` for Claude, `~/.gemini/oauth_creds.json` for Gemini, `~/.codex/` for Codex). Return `AgentAvailability[]` with install status, version, and authentication state. Use `Bun.spawn` for detection commands. Cache results with TTL.
+  - activeForm: Implementing CLI agent discovery
+  - createdAt: 2026-02-23 09:00
+  - blocked by: AGENT-002
+
+- [x] **AGENT-004 Implement command builder utility** `P1`
+  - description: Create `app/agents/command.ts` with a fluent command builder for constructing agent CLI invocations. Support base command, params, env vars, shell param extensions, and command overrides. Handle both NPX-based (`npx -y @anthropic-ai/claude-code@latest`) and native binary (`cursor-agent`) launch patterns. Include `resolveExecutable()` to find the actual binary path. Translate the Rust `CommandBuilder` pattern to TypeScript.
+  - activeForm: Building command builder utility
+  - createdAt: 2026-02-23 09:00
+  - blocked by: AGENT-002
+
+- [x] **AGENT-005 Implement base executor interface and Claude Code executor** `P1`
+  - description: Create `app/agents/executor.ts` with base `AgentExecutor` interface (spawn, spawnFollowUp, spawnReview, cancel, getAvailability, normalizeLog). Create `app/agents/executors/claude.ts` implementing Claude Code executor. Use `Bun.spawn` with stdin/stdout piped. Handle CLI args (`-p --output-format=stream-json --verbose`), model selection, permission modes (bypass/plan/default), session resume (`--resume`), and the stream-json output parsing. This is the primary executor — others will follow the same pattern.
+  - activeForm: Implementing Claude Code executor
+  - createdAt: 2026-02-23 09:00
+  - blocked by: AGENT-002, AGENT-004
+
+- [x] **AGENT-006 Implement log normalization system** `P1`
+  - description: Create `app/agents/logs.ts` with log normalization that converts agent-specific output formats into unified `NormalizedLogEntry` records. For Claude Code stream-json: parse JSONL lines, handle `assistant`, `tool_use`, `tool_result`, `error`, `system` message types. Map tool calls to `ActionType` categories (FileRead, FileEdit, CommandRun, Search, etc.). Support streaming via async iterators. Include a `PlainTextProcessor` fallback for agents without structured output.
+  - activeForm: Implementing log normalization
+  - createdAt: 2026-02-23 09:00
+  - blocked by: AGENT-002, AGENT-005
+
+- [x] **AGENT-007 Implement session management and API routes** `P1`
+  - description: Create `app/routes/agents.ts` with API routes for agent management: `GET /api/agents/available` (list detected agents), `POST /api/projects/:projectId/sessions` (create agent session), `POST /api/projects/:projectId/sessions/:id/execute` (spawn/follow-up agent), `POST /api/projects/:projectId/sessions/:id/cancel` (cancel running process), `GET /api/projects/:projectId/sessions/:id/logs` (get normalized logs). Create `app/agents/session-manager.ts` for session lifecycle. Integrate with memory-store initially, with DB persistence ready.
+  - activeForm: Building session management routes
+  - createdAt: 2026-02-23 09:00
+  - blocked by: AGENT-001, AGENT-005, AGENT-006
+
+- [x] **AGENT-008 Implement process lifecycle manager** `P1`
+  - description: Create `app/agents/process-manager.ts` that manages spawned agent processes. Track active processes in memory (Map by execution ID). Handle process start, monitor stdout/stderr streams, detect completion/errors, enforce timeouts, support graceful cancellation (SIGTERM then SIGKILL). Emit events for process state changes. Implement cleanup on server shutdown. Use Bun's `subprocess.exited` promise and `subprocess.kill()` APIs.
+  - activeForm: Implementing process lifecycle manager
+  - createdAt: 2026-02-23 09:00
+  - blocked by: AGENT-002, AGENT-005
+
+- [x] **AGENT-009 Split executors per agent and add model fields** `P1`
+  - description: Refactor agent system to only support Claude Code, Codex, and Gemini. Split executors into individual files per agent (`executors/claude.ts`, `executors/codex.ts`, `executors/gemini.ts`) with a central registry (`executors/index.ts`). Reduce `AgentType` to 3 values. Add `AgentModel` interface and `availableModels` field to `AgentProfile`. Codex and Gemini executors are stubs with TODO markers. Update session-manager to use the registry instead of hardcoded executor map. Clean up `DETECTION_CONFIG` and `BUILT_IN_PROFILES` to only include the 3 supported agents.
+  - activeForm: Splitting executor per agent
+  - createdAt: 2026-02-23 14:00
+  - blocked by: AGENT-005

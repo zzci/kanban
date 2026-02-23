@@ -13,7 +13,7 @@ const issues = new Hono()
 issues.get('/', (c) => {
   const projectId = c.req.param('projectId')
   const allIssues = getIssuesByProject(projectId)
-  const withTags = allIssues.map((issue) => ({
+  const withTags = allIssues.map(issue => ({
     ...issue,
     tags: getTagsForIssue(issue.id),
   }))
@@ -44,7 +44,7 @@ issues.post('/', async (c) => {
 
 issues.patch('/bulk', async (c) => {
   const body = await c.req.json<{
-    updates?: Array<{ id: string; changes: { statusId?: string; sortOrder?: number } }>
+    updates?: Array<{ id: string, changes: { statusId?: string, sortOrder?: number } }>
   }>()
   if (!body.updates || !Array.isArray(body.updates)) {
     return c.json({ success: false, error: 'updates array is required' }, 400)
