@@ -59,7 +59,7 @@ export function IssueDetail({
   status?: Status
 }) {
   const { t, i18n } = useTranslation()
-  const prio = PRIORITY_CONFIG[issue.priority] ?? PRIORITY_CONFIG.medium
+  const prio = PRIORITY_CONFIG[issue.priority]
   const PrioIcon = prio.icon
 
   return (

@@ -45,8 +45,7 @@ export function ChatInput({
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      const items = e.clipboardData?.items
-      if (!items) return
+      const items = e.clipboardData.items
       const rawFiles: File[] = []
       for (const item of items) {
         if (item.kind === 'file') {

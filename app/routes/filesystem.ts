@@ -1,6 +1,6 @@
-import { Hono } from 'hono'
 import { readdir } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
+import { Hono } from 'hono'
 
 const filesystem = new Hono()
 
@@ -12,8 +12,8 @@ filesystem.get('/dirs', async (c) => {
   try {
     const entries = await readdir(current, { withFileTypes: true })
     const dirs = entries
-      .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
-      .map((e) => e.name)
+      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+      .map(e => e.name)
       .sort((a, b) => a.localeCompare(b))
 
     return c.json({

@@ -56,14 +56,14 @@ const DEFAULT_PROJECT_ID = 'default'
 
 // ---------- Seed projects ----------
 
-const SEED_PROJECTS: Array<{ id: string; name: string }> = [
+const SEED_PROJECTS: Array<{ id: string, name: string }> = [
   { id: DEFAULT_PROJECT_ID, name: 'My Project' },
   { id: 'frontend', name: 'Frontend App' },
   { id: 'backend', name: 'Backend API' },
   { id: 'mobile', name: 'Mobile App' },
 ]
 
-let projects: Project[] = SEED_PROJECTS.map((p) => ({
+let projects: Project[] = SEED_PROJECTS.map(p => ({
   ...p,
   createdAt: now(),
   updatedAt: now(),
@@ -76,8 +76,8 @@ const DEFAULT_STATUSES = [
   { name: 'Done', color: '#22c55e', sortOrder: 3 },
 ]
 
-let statuses: Status[] = SEED_PROJECTS.flatMap((p) =>
-  DEFAULT_STATUSES.map((s) => ({ id: ulid(), projectId: p.id, ...s })),
+let statuses: Status[] = SEED_PROJECTS.flatMap(p =>
+  DEFAULT_STATUSES.map(s => ({ id: ulid(), projectId: p.id, ...s })),
 )
 
 // ---------- Seed issues per project ----------
@@ -457,7 +457,7 @@ const ISSUE_SEEDS: Record<
 }
 
 function getStatusesForProject(projectId: string): Status[] {
-  return statuses.filter((s) => s.projectId === projectId).sort((a, b) => a.sortOrder - b.sortOrder)
+  return statuses.filter(s => s.projectId === projectId).sort((a, b) => a.sortOrder - b.sortOrder)
 }
 
 let nextIssueNumber = 1
@@ -486,7 +486,7 @@ for (const proj of SEED_PROJECTS) {
   }
 }
 
-let tags: Tag[] = SEED_PROJECTS.flatMap((p) => [
+let tags: Tag[] = SEED_PROJECTS.flatMap(p => [
   { id: ulid(), projectId: p.id, name: 'Bug', color: '#ef4444' },
   { id: ulid(), projectId: p.id, name: 'Feature', color: '#8b5cf6' },
   { id: ulid(), projectId: p.id, name: 'Docs', color: '#06b6d4' },
@@ -501,7 +501,7 @@ export function getProjects(): Project[] {
 }
 
 export function getProject(id: string): Project | undefined {
-  return projects.find((p) => p.id === id)
+  return projects.find(p => p.id === id)
 }
 
 export function createProject(data: {
@@ -539,8 +539,9 @@ export function updateProject(
   id: string,
   changes: Partial<Pick<Project, 'name' | 'description' | 'directory' | 'repositoryUrl'>>,
 ): Project | undefined {
-  const idx = projects.findIndex((p) => p.id === id)
-  if (idx === -1) return undefined
+  const idx = projects.findIndex(p => p.id === id)
+  if (idx === -1)
+    return undefined
   const updated = { ...projects[idx]!, ...changes, updatedAt: now() }
   projects = projects.map((p, i) => (i === idx ? updated : p))
   return updated
@@ -549,12 +550,12 @@ export function updateProject(
 // ---------- Statuses ----------
 
 export function getStatusesByProject(projectId: string): Status[] {
-  return statuses.filter((s) => s.projectId === projectId).sort((a, b) => a.sortOrder - b.sortOrder)
+  return statuses.filter(s => s.projectId === projectId).sort((a, b) => a.sortOrder - b.sortOrder)
 }
 
-export function createStatus(projectId: string, data: { name: string; color: string }): Status {
+export function createStatus(projectId: string, data: { name: string, color: string }): Status {
   const maxOrder = statuses
-    .filter((s) => s.projectId === projectId)
+    .filter(s => s.projectId === projectId)
     .reduce((max, s) => Math.max(max, s.sortOrder), -1)
   const status: Status = {
     id: ulid(),
@@ -571,8 +572,9 @@ export function updateStatus(
   id: string,
   changes: Partial<Pick<Status, 'name' | 'color' | 'sortOrder'>>,
 ): Status | undefined {
-  const idx = statuses.findIndex((s) => s.id === id)
-  if (idx === -1) return undefined
+  const idx = statuses.findIndex(s => s.id === id)
+  if (idx === -1)
+    return undefined
   const updated = { ...statuses[idx]!, ...changes }
   statuses = statuses.map((s, i) => (i === idx ? updated : s))
   return updated
@@ -581,11 +583,11 @@ export function updateStatus(
 // ---------- Issues ----------
 
 export function getIssuesByProject(projectId: string): Issue[] {
-  return issues.filter((i) => i.projectId === projectId)
+  return issues.filter(i => i.projectId === projectId)
 }
 
 export function getIssue(id: string): Issue | undefined {
-  return issues.find((i) => i.id === id)
+  return issues.find(i => i.id === id)
 }
 
 export function createIssue(
@@ -600,7 +602,7 @@ export function createIssue(
   const issueNumber = nextIssueNumber++
 
   const maxOrder = issues
-    .filter((i) => i.projectId === projectId && i.statusId === data.statusId)
+    .filter(i => i.projectId === projectId && i.statusId === data.statusId)
     .reduce((max, i) => Math.max(max, i.sortOrder), -1)
 
   const issue: Issue = {
@@ -627,20 +629,22 @@ export function updateIssue(
     Pick<Issue, 'title' | 'description' | 'priority' | 'statusId' | 'sortOrder' | 'parentIssueId'>
   >,
 ): Issue | undefined {
-  const idx = issues.findIndex((i) => i.id === id)
-  if (idx === -1) return undefined
+  const idx = issues.findIndex(i => i.id === id)
+  if (idx === -1)
+    return undefined
   const updated = { ...issues[idx]!, ...changes, updatedAt: now() }
   issues = issues.map((i, index) => (index === idx ? updated : i))
   return updated
 }
 
 export function bulkUpdateIssues(
-  updates: Array<{ id: string; changes: Partial<Pick<Issue, 'statusId' | 'sortOrder'>> }>,
+  updates: Array<{ id: string, changes: Partial<Pick<Issue, 'statusId' | 'sortOrder'>> }>,
 ): Issue[] {
   const result: Issue[] = []
   for (const { id, changes } of updates) {
     const updated = updateIssue(id, changes)
-    if (updated) result.push(updated)
+    if (updated)
+      result.push(updated)
   }
   return result
 }
@@ -648,35 +652,37 @@ export function bulkUpdateIssues(
 // ---------- Tags ----------
 
 export function getTagsByProject(projectId: string): Tag[] {
-  return tags.filter((t) => t.projectId === projectId)
+  return tags.filter(t => t.projectId === projectId)
 }
 
-export function createTag(projectId: string, data: { name: string; color: string }): Tag {
+export function createTag(projectId: string, data: { name: string, color: string }): Tag {
   const tag: Tag = { id: ulid(), projectId, name: data.name, color: data.color }
   tags = [...tags, tag]
   return tag
 }
 
 export function deleteTag(projectId: string, tagId: string): boolean {
-  const tag = tags.find((t) => t.id === tagId && t.projectId === projectId)
-  if (!tag) return false
-  tags = tags.filter((t) => t.id !== tagId)
-  issueTags = issueTags.filter((it) => it.tagId !== tagId)
+  const tag = tags.find(t => t.id === tagId && t.projectId === projectId)
+  if (!tag)
+    return false
+  tags = tags.filter(t => t.id !== tagId)
+  issueTags = issueTags.filter(it => it.tagId !== tagId)
   return true
 }
 
 export function getIssueTagsByIssue(issueId: string): IssueTag[] {
-  return issueTags.filter((it) => it.issueId === issueId)
+  return issueTags.filter(it => it.issueId === issueId)
 }
 
 export function getTagsForIssue(issueId: string): Tag[] {
-  const tagIds = issueTags.filter((it) => it.issueId === issueId).map((it) => it.tagId)
-  return tags.filter((t) => tagIds.includes(t.id))
+  const tagIds = issueTags.filter(it => it.issueId === issueId).map(it => it.tagId)
+  return tags.filter(t => tagIds.includes(t.id))
 }
 
 export function addTagToIssue(issueId: string, tagId: string): IssueTag {
-  const existing = issueTags.find((it) => it.issueId === issueId && it.tagId === tagId)
-  if (existing) return existing
+  const existing = issueTags.find(it => it.issueId === issueId && it.tagId === tagId)
+  if (existing)
+    return existing
   const issueTag: IssueTag = { id: ulid(), issueId, tagId }
   issueTags = [...issueTags, issueTag]
   return issueTag
@@ -684,6 +690,6 @@ export function addTagToIssue(issueId: string, tagId: string): IssueTag {
 
 export function removeTagFromIssue(issueId: string, tagId: string): boolean {
   const before = issueTags.length
-  issueTags = issueTags.filter((it) => !(it.issueId === issueId && it.tagId === tagId))
+  issueTags = issueTags.filter(it => !(it.issueId === issueId && it.tagId === tagId))
   return issueTags.length < before
 }

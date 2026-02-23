@@ -1,8 +1,10 @@
 import { Hono } from 'hono'
+import { compress } from 'hono/compress'
 import { apiRoutes } from './routes'
 
 const app = new Hono()
 
+app.use(compress())
 app.route('/api', apiRoutes)
 
 app.all('/api/*', (c) => {
