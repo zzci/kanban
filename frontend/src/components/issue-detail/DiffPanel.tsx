@@ -8,20 +8,28 @@ export function DiffPanel({
   width,
   onWidthChange,
   onClose,
+  fullScreen,
 }: {
   width: number
   onWidthChange: (w: number) => void
   onClose: () => void
+  fullScreen?: boolean
 }) {
   const { t } = useTranslation()
 
   return (
     <div
-      className="relative h-full shrink-0 border-l border-border bg-background"
-      style={{ width }}
+      className={
+        fullScreen
+          ? 'flex flex-col flex-1 bg-background'
+          : 'relative h-full shrink-0 border-l border-border bg-background'
+      }
+      style={fullScreen ? undefined : { width }}
     >
-      {/* Resize handle — absolutely positioned, no layout space */}
-      <ResizeHandle width={width} onWidthChange={onWidthChange} />
+      {/* Resize handle — desktop only */}
+      {!fullScreen ? (
+        <ResizeHandle width={width} onWidthChange={onWidthChange} />
+      ) : null}
 
       {/* Panel content */}
       <div className="flex flex-col h-full">

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Play, Link, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useIssue, useStatuses } from '@/hooks/use-kanban'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { IssueDetail } from './IssueDetail'
 import { ChatInput } from './ChatInput'
 import { DiffPanel } from './DiffPanel'
@@ -35,6 +36,7 @@ export function ChatArea({
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showReview, setShowReview] = useState(false)
   const [copied, setCopied] = useState(false)
+  const isMobile = useIsMobile()
 
   if (isLoading) {
     return (
@@ -139,13 +141,24 @@ export function ChatArea({
         <ChatInput diffOpen={showDiff} onToggleDiff={onToggleDiff} />
       </div>
 
-      {/* Diff panel */}
+      {/* Diff panel — full-screen overlay on mobile, inline on desktop */}
       {showDiff ? (
-        <DiffPanel
-          width={diffWidth}
-          onWidthChange={onDiffWidthChange}
-          onClose={onCloseDiff}
-        />
+        isMobile ? (
+          <div className="fixed inset-0 z-40 bg-background flex flex-col">
+            <DiffPanel
+              width={0}
+              onWidthChange={onDiffWidthChange}
+              onClose={onCloseDiff}
+              fullScreen
+            />
+          </div>
+        ) : (
+          <DiffPanel
+            width={diffWidth}
+            onWidthChange={onDiffWidthChange}
+            onClose={onCloseDiff}
+          />
+        )
       ) : null}
 
       {/* Review dialog */}

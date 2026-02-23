@@ -84,7 +84,7 @@ export default function IssueDetailPage() {
         <ChatArea
           projectId={projectId}
           issueId={issueId}
-          showDiff={!isMobile && showDiff}
+          showDiff={showDiff}
           diffWidth={diffWidth}
           onToggleDiff={() => setShowDiff((v) => !v)}
           onDiffWidthChange={handleDiffWidthChange}
