@@ -1,8 +1,9 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { FileText, ImageIcon, Paperclip, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { FilePreviewDialog } from '@/components/FilePreviewDialog'
 import { fileContentHash } from '@/lib/file-hash'
+import { useClickOutside } from '@/hooks/use-click-outside'
 
 export function ChatInput({
   diffOpen,
@@ -188,10 +189,11 @@ export function ChatInput({
             </button>
           </div>
 
+          {/* TODO: Wire up send handler when chat API is implemented */}
           <button
             type="button"
             disabled={!input.trim()}
-            className="rounded-lg bg-foreground px-3.5 py-1 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-30"
+            className="rounded-lg bg-foreground px-3.5 py-1 text-sm font-medium text-background transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-not-allowed opacity-50"
           >
             {t('chat.send')}
           </button>
@@ -211,17 +213,7 @@ function TokenUsage() {
   const r = 7
   const c = 2 * Math.PI * r
   const offset = c * (1 - pct / 100)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+  useClickOutside(ref, open, () => setOpen(false))
 
   return (
     <div ref={ref} className="relative">

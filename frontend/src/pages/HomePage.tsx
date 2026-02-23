@@ -22,26 +22,14 @@ import { Separator } from '@/components/ui/separator'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useTheme } from '@/hooks/use-theme'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { AppLogo } from '@/components/AppLogo'
 import { useViewModeStore } from '@/stores/view-mode-store'
-
-const LANGUAGES = [
-  { id: 'zh', label: '中文' },
-  { id: 'en', label: 'English' },
-] as const
-
-function getProjectInitials(name: string): string {
-  const trimmed = name.trim()
-  if (!trimmed) return '??'
-  const words = trimmed.split(/\s+/)
-  if (words.length >= 2) {
-    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
-  }
-  return trimmed.slice(0, 2).toUpperCase()
-}
+import { useClickOutside } from '@/hooks/use-click-outside'
+import { getProjectInitials } from '@/lib/format'
+import { LANGUAGES } from '@/lib/constants'
 
 function ProjectCard({
   project,
@@ -111,7 +99,7 @@ function ProjectCard({
   )
 }
 
-/* ── Mobile menu sheet (right-side) ─────────────────── */
+/* -- Mobile menu sheet (right-side) -------------------- */
 
 function MobileHomeMenu({ onCreateProject }: { onCreateProject: () => void }) {
   const { t, i18n } = useTranslation()
@@ -140,7 +128,7 @@ function MobileHomeMenu({ onCreateProject }: { onCreateProject: () => void }) {
         >
           <SheetTitle className="sr-only">{t('sidebar.menu')}</SheetTitle>
           <div className="flex flex-col h-full">
-            {/* Actions — no header */}
+            {/* Actions -- no header */}
             <div className="flex-1 pt-2">
               {/* New project */}
               <button
@@ -214,7 +202,7 @@ function MobileHomeMenu({ onCreateProject }: { onCreateProject: () => void }) {
   )
 }
 
-/* ── Desktop header controls (inline) ───────────────── */
+/* -- Desktop header controls (inline) ------------------- */
 
 function DesktopHeaderControls({
   onCreateProject,
@@ -225,17 +213,7 @@ function DesktopHeaderControls({
   const { resolved, toggle } = useTheme()
   const [langOpen, setLangOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!langOpen) return
-    function handleClick(e: MouseEvent) {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setLangOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [langOpen])
+  useClickOutside(langRef, langOpen, () => setLangOpen(false))
 
   const currentLang =
     LANGUAGES.find((l) => l.id === i18n.language) ?? LANGUAGES[0]
@@ -243,17 +221,7 @@ function DesktopHeaderControls({
   const { mode, setMode } = useViewModeStore()
   const [viewOpen, setViewOpen] = useState(false)
   const viewRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!viewOpen) return
-    function handleClick(e: MouseEvent) {
-      if (viewRef.current && !viewRef.current.contains(e.target as Node)) {
-        setViewOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [viewOpen])
+  useClickOutside(viewRef, viewOpen, () => setViewOpen(false))
 
   const ViewIcon = mode === 'kanban' ? LayoutGrid : List
 
@@ -269,7 +237,9 @@ function DesktopHeaderControls({
         >
           <ViewIcon className="h-4 w-4" />
           <span className="text-xs">
-            {mode === 'kanban' ? 'Kanban' : 'List'}
+            {mode === 'kanban'
+              ? t('viewMode.kanban')
+              : t('viewMode.list')}
           </span>
         </Button>
         {viewOpen ? (
@@ -285,7 +255,7 @@ function DesktopHeaderControls({
               }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              Kanban
+              {t('viewMode.kanban')}
             </button>
             <button
               type="button"
@@ -298,7 +268,7 @@ function DesktopHeaderControls({
               }`}
             >
               <List className="h-3.5 w-3.5" />
-              List
+              {t('viewMode.list')}
             </button>
           </div>
         ) : null}
@@ -360,7 +330,7 @@ function DesktopHeaderControls({
   )
 }
 
-/* ── Main page ──────────────────────────────────────── */
+/* -- Main page ------------------------------------------ */
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -387,7 +357,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen text-foreground animate-page-enter">
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-12">
-        {/* Header row — always horizontal */}
+        {/* Header row -- always horizontal */}
         <div className="mb-6 flex items-center gap-3 md:mb-8">
           <AppLogo className="h-9 w-9" />
           <h1 className="text-xl font-semibold tracking-tight md:text-2xl">

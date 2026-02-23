@@ -168,9 +168,7 @@ export function ChatArea({
       ) : null}
 
       {/* Review dialog */}
-      {showReview ? (
-        <ReviewDialog onClose={() => setShowReview(false)} />
-      ) : null}
+      <ReviewDialog open={showReview} onOpenChange={setShowReview} />
     </div>
   )
 }

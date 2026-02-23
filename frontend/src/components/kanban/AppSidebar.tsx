@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import {
   Globe,
   LayoutGrid,
@@ -18,16 +18,9 @@ import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 import { AppLogo } from '@/components/AppLogo'
 import { useTheme } from '@/hooks/use-theme'
 import { useViewModeStore } from '@/stores/view-mode-store'
-
-function getProjectInitials(name: string): string {
-  const trimmed = name.trim()
-  if (!trimmed) return '??'
-  const words = trimmed.split(/\s+/)
-  if (words.length >= 2) {
-    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
-  }
-  return trimmed.slice(0, 2).toUpperCase()
-}
+import { useClickOutside } from '@/hooks/use-click-outside'
+import { getProjectInitials } from '@/lib/format'
+import { LANGUAGES } from '@/lib/constants'
 
 function ProjectButton({
   project,
@@ -168,26 +161,11 @@ export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
   )
 }
 
-const LANGUAGES = [
-  { id: 'zh', label: '中文' },
-  { id: 'en', label: 'English' },
-] as const
-
 function LanguageSelector() {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+  useClickOutside(ref, open, () => setOpen(false))
 
   const current = LANGUAGES.find((l) => l.id === i18n.language) ?? LANGUAGES[0]
 
@@ -257,17 +235,7 @@ function ViewModeToggle() {
   const { mode, setMode } = useViewModeStore()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+  useClickOutside(ref, open, () => setOpen(false))
 
   const Icon = mode === 'kanban' ? LayoutGrid : List
 
@@ -278,7 +246,7 @@ function ViewModeToggle() {
         size="icon"
         className="h-9 w-9 text-muted-foreground"
         aria-label={t('viewMode.switchView')}
-        title={mode === 'kanban' ? 'Kanban' : 'List'}
+        title={mode === 'kanban' ? t('viewMode.kanban') : t('viewMode.list')}
         onClick={() => setOpen((v) => !v)}
       >
         <Icon className="h-4 w-4" />
@@ -296,7 +264,7 @@ function ViewModeToggle() {
             }`}
           >
             <LayoutGrid className="h-3.5 w-3.5" />
-            Kanban
+            {t('viewMode.kanban')}
           </button>
           <button
             type="button"
@@ -309,7 +277,7 @@ function ViewModeToggle() {
             }`}
           >
             <List className="h-3.5 w-3.5" />
-            List
+            {t('viewMode.list')}
           </button>
         </div>
       ) : null}

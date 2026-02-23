@@ -18,21 +18,8 @@ import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 import { AppLogo } from '@/components/AppLogo'
-
-const LANGUAGES = [
-  { id: 'zh', label: '中文' },
-  { id: 'en', label: 'English' },
-] as const
-
-function getProjectInitials(name: string): string {
-  const trimmed = name.trim()
-  if (!trimmed) return '??'
-  const words = trimmed.split(/\s+/)
-  if (words.length >= 2) {
-    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
-  }
-  return trimmed.slice(0, 2).toUpperCase()
-}
+import { getProjectInitials } from '@/lib/format'
+import { LANGUAGES } from '@/lib/constants'
 
 export function MobileSidebarTrigger({ onOpen }: { onOpen: () => void }) {
   const { t } = useTranslation()
@@ -92,7 +79,7 @@ export function MobileSidebar({
           <SheetTitle className="sr-only">{t('sidebar.menu')}</SheetTitle>
 
           <div className="flex flex-col h-full">
-            {/* Header — links to homepage */}
+            {/* Header -- links to homepage (Kanban is the brand name) */}
             <button
               type="button"
               onClick={() => {
