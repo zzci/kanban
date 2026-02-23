@@ -295,7 +295,7 @@ export function CreateIssueForm({
         <p className="text-xs font-medium text-muted-foreground mb-2">
           {t('issue.properties')}
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <PropertyRow label={t('issue.status')}>
             <StatusSelect
               statuses={statuses ?? []}
@@ -428,7 +428,7 @@ export function CreateIssueDialog() {
       }}
     >
       <DialogContent
-        className="flex flex-col gap-0 p-0 max-w-[580px] rounded-xl overflow-visible top-[36%]"
+        className="flex flex-col gap-0 p-0 max-w-[calc(100%-2rem)] md:max-w-[580px] rounded-xl overflow-visible top-[50%] md:top-[36%]"
         aria-describedby={undefined}
         onInteractOutside={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}

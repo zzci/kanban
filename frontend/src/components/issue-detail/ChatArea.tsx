@@ -17,6 +17,7 @@ export function ChatArea({
   onToggleDiff,
   onDiffWidthChange,
   onCloseDiff,
+  showBackToList,
 }: {
   projectId: string
   issueId: string
@@ -25,6 +26,7 @@ export function ChatArea({
   onToggleDiff: () => void
   onDiffWidthChange: (w: number) => void
   onCloseDiff: () => void
+  showBackToList?: boolean
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -66,13 +68,19 @@ export function ChatArea({
       {/* Chat column */}
       <div className="flex flex-1 min-w-0 flex-col">
         {/* Title bar */}
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b shrink-0 min-h-[45px]">
+        <div className="flex items-center gap-2 px-3 py-2.5 border-b shrink-0 min-h-[45px] md:gap-3 md:px-4">
           <Button
             variant="ghost"
             size="icon"
             className="h-7 w-7 text-muted-foreground shrink-0"
-            onClick={() => navigate(`/projects/${projectId}`)}
-            title={t('issue.backToBoard')}
+            onClick={() =>
+              showBackToList
+                ? navigate(`/projects/${projectId}/issues`)
+                : navigate(`/projects/${projectId}`)
+            }
+            title={
+              showBackToList ? t('issue.backToList') : t('issue.backToBoard')
+            }
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -111,11 +119,11 @@ export function ChatArea({
           <Button
             variant="outline"
             size="sm"
-            className="shrink-0 gap-1.5 text-xs h-7 px-3"
+            className="shrink-0 gap-1.5 text-xs h-7 px-2 md:px-3"
             onClick={() => setShowReview(true)}
           >
             <Play className="h-3 w-3" />
-            {t('review.startReview')}
+            <span className="hidden md:inline">{t('review.startReview')}</span>
           </Button>
         </div>
 

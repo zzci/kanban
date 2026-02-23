@@ -56,6 +56,8 @@
     "selectStatus": "Select status",
     "notFound": "Issue not found",
     "backToBoard": "Back to board",
+    "backToList": "Back to list",
+    "selectToStart": "Select an issue to get started",
     "noChatMessages": "No messages yet, send a message to start",
     "copyLink": "Copy link",
     "openFullPage": "Open in full page",
@@ -138,6 +140,7 @@
   },
   "sidebar": {
     "home": "Home",
+    "menu": "Menu",
     "createProject": "Create project",
     "settings": "Settings"
   },

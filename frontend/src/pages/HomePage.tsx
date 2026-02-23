@@ -5,6 +5,7 @@ import {
   Plus,
   Hash,
   Layers,
+  Menu,
   Moon,
   Sun,
   MoreVertical,
@@ -16,10 +17,17 @@ import type { Project } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
 import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTheme } from '@/hooks/use-theme'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 const LANGUAGES = [
   { id: 'zh', label: '中文' },
@@ -104,13 +112,132 @@ function ProjectCard({
   )
 }
 
-export default function HomePage() {
-  const navigate = useNavigate()
-  const { t, i18n } = useTranslation()
-  const { data: projects, isLoading } = useProjects()
-  const [showCreate, setShowCreate] = useState(false)
-  const { resolved, toggle } = useTheme()
+/* ── Mobile menu sheet (right-side) ─────────────────── */
 
+function MobileHomeMenu({
+  onCreateProject,
+}: {
+  onCreateProject: () => void
+}) {
+  const { t, i18n } = useTranslation()
+  const { resolved, toggle } = useTheme()
+  const [open, setOpen] = useState(false)
+  const [langExpanded, setLangExpanded] = useState(false)
+  const currentLang =
+    LANGUAGES.find((l) => l.id === i18n.language) ?? LANGUAGES[0]
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 text-muted-foreground md:hidden"
+        aria-label={t('sidebar.menu')}
+        onClick={() => setOpen(true)}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent
+          side="right"
+          className="w-72 p-0"
+          aria-describedby={undefined}
+        >
+          <SheetTitle className="sr-only">{t('sidebar.menu')}</SheetTitle>
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <FolderKanban className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-semibold">
+                {t('sidebar.menu')}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex-1">
+              {/* New project */}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false)
+                  onCreateProject()
+                }}
+                className="flex items-center gap-3 w-full px-4 min-h-[48px] text-sm text-foreground/80 hover:bg-accent/50 active:bg-accent transition-colors"
+              >
+                <Plus className="h-4.5 w-4.5 text-muted-foreground" />
+                {t('project.newProject')}
+              </button>
+
+              <Separator />
+
+              {/* Language */}
+              <button
+                type="button"
+                onClick={() => setLangExpanded((v) => !v)}
+                className="flex items-center gap-3 w-full px-4 min-h-[48px] text-sm text-foreground/80 hover:bg-accent/50 active:bg-accent transition-colors"
+              >
+                <Globe className="h-4.5 w-4.5 text-muted-foreground" />
+                <span>{t('language.switchLanguage')}</span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {currentLang.label}
+                </span>
+              </button>
+              {langExpanded ? (
+                <div className="bg-accent/20 px-4">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.id}
+                      type="button"
+                      onClick={() => {
+                        i18n.changeLanguage(lang.id)
+                        setLangExpanded(false)
+                      }}
+                      className={`flex items-center gap-3 w-full pl-8 min-h-[44px] text-sm transition-colors hover:bg-accent/50 active:bg-accent ${
+                        lang.id === i18n.language
+                          ? 'text-primary font-medium'
+                          : 'text-foreground/70'
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Theme */}
+              <button
+                type="button"
+                onClick={toggle}
+                className="flex items-center gap-3 w-full px-4 min-h-[48px] text-sm text-foreground/80 hover:bg-accent/50 active:bg-accent transition-colors"
+              >
+                {resolved === 'dark' ? (
+                  <Sun className="h-4.5 w-4.5 text-muted-foreground" />
+                ) : (
+                  <Moon className="h-4.5 w-4.5 text-muted-foreground" />
+                )}
+                {resolved === 'dark'
+                  ? t('theme.switchToLight')
+                  : t('theme.switchToDark')}
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
+  )
+}
+
+/* ── Desktop header controls (inline) ───────────────── */
+
+function DesktopHeaderControls({
+  onCreateProject,
+}: {
+  onCreateProject: () => void
+}) {
+  const { t, i18n } = useTranslation()
+  const { resolved, toggle } = useTheme()
   const [langOpen, setLangOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
 
@@ -128,6 +255,79 @@ export default function HomePage() {
   const currentLang =
     LANGUAGES.find((l) => l.id === i18n.language) ?? LANGUAGES[0]
 
+  return (
+    <div className="ml-auto flex items-center gap-2">
+      <div ref={langRef} className="relative">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 text-muted-foreground"
+          onClick={() => setLangOpen((v) => !v)}
+          aria-label={t('language.switchLanguage')}
+        >
+          <Globe className="h-4 w-4" />
+          <span className="text-xs">{currentLang.label}</span>
+        </Button>
+        {langOpen ? (
+          <div className="absolute right-0 top-full mt-1 z-[100] min-w-[120px] rounded-md border bg-popover py-1 shadow-lg">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.id}
+                type="button"
+                onClick={() => {
+                  i18n.changeLanguage(lang.id)
+                  setLangOpen(false)
+                }}
+                className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent ${
+                  lang.id === i18n.language
+                    ? 'bg-accent/50 font-medium'
+                    : ''
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground"
+        onClick={toggle}
+        aria-label={
+          resolved === 'dark'
+            ? t('theme.switchToLight')
+            : t('theme.switchToDark')
+        }
+      >
+        {resolved === 'dark' ? (
+          <Sun className="h-4 w-4" />
+        ) : (
+          <Moon className="h-4 w-4" />
+        )}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onCreateProject}
+      >
+        <Plus className="h-4 w-4" />
+        {t('project.newProject')}
+      </Button>
+    </div>
+  )
+}
+
+/* ── Main page ──────────────────────────────────────── */
+
+export default function HomePage() {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const { data: projects, isLoading } = useProjects()
+  const [showCreate, setShowCreate] = useState(false)
+  const isMobile = useIsMobile()
+
   const handleProjectCreated = useCallback(
     (project: Project) => {
       navigate(`/projects/${project.id}`)
@@ -137,12 +337,13 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-8 flex items-center gap-3">
+      <section className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-12">
+        {/* Header row — always horizontal */}
+        <div className="mb-6 flex items-center gap-3 md:mb-8">
           <span className="rounded-xl bg-primary/15 p-2 text-primary">
             <FolderKanban className="h-5 w-5" />
           </span>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
             {t('project.projects')}
           </h1>
           {projects ? (
@@ -150,66 +351,19 @@ export default function HomePage() {
               {projects.length}
             </Badge>
           ) : null}
-          <div className="ml-auto flex items-center gap-2">
-            <div ref={langRef} className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-1.5 text-muted-foreground"
-                onClick={() => setLangOpen((v) => !v)}
-                aria-label={t('language.switchLanguage')}
-              >
-                <Globe className="h-4 w-4" />
-                <span className="text-xs">{currentLang.label}</span>
-              </Button>
-              {langOpen ? (
-                <div className="absolute right-0 top-full mt-1 z-[100] min-w-[120px] rounded-md border bg-popover py-1 shadow-lg">
-                  {LANGUAGES.map((lang) => (
-                    <button
-                      key={lang.id}
-                      type="button"
-                      onClick={() => {
-                        i18n.changeLanguage(lang.id)
-                        setLangOpen(false)
-                      }}
-                      className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent ${
-                        lang.id === i18n.language
-                          ? 'bg-accent/50 font-medium'
-                          : ''
-                      }`}
-                    >
-                      {lang.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+
+          {/* Mobile: right-side menu sheet */}
+          {isMobile ? (
+            <div className="ml-auto">
+              <MobileHomeMenu
+                onCreateProject={() => setShowCreate(true)}
+              />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={toggle}
-              aria-label={
-                resolved === 'dark'
-                  ? t('theme.switchToLight')
-                  : t('theme.switchToDark')
-              }
-            >
-              {resolved === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreate(true)}
-            >
-              <Plus className="h-4 w-4" />
-              {t('project.newProject')}
-            </Button>
-          </div>
+          ) : (
+            <DesktopHeaderControls
+              onCreateProject={() => setShowCreate(true)}
+            />
+          )}
         </div>
 
         {isLoading ? (

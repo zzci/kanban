@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useProject, useIssues, useStatuses } from '@/hooks/use-kanban'
@@ -7,9 +7,11 @@ import {
   PANEL_MIN_WIDTH,
   PANEL_MAX_WIDTH_RATIO,
 } from '@/stores/panel-store'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
 import { KanbanHeader } from '@/components/kanban/KanbanHeader'
 import { AppSidebar } from '@/components/kanban/AppSidebar'
+import { MobileSidebar } from '@/components/kanban/MobileSidebar'
 import { IssuePanel } from '@/components/kanban/IssuePanel'
 import { CreateIssueDialog } from '@/components/kanban/CreateIssueDialog'
 
@@ -21,6 +23,7 @@ export default function KanbanPage() {
   const { data: statuses } = useStatuses(projectId)
 
   const { panel, isPanelOpen, width, close } = usePanelStore()
+  const isMobile = useIsMobile()
 
   if (isLoading) {
     return (
@@ -43,19 +46,22 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      {/* Left Sidebar */}
-      <AppSidebar activeProjectId={projectId} />
+    <div className="flex h-dvh bg-background text-foreground">
+      {/* Left Sidebar — hidden on mobile */}
+      {!isMobile ? <AppSidebar activeProjectId={projectId} /> : null}
 
       {/* Main Content — inert when panel is open to trap keyboard focus */}
       <div
         className="flex flex-1 min-w-0 flex-col"
-        {...(isPanelOpen ? { inert: '' as unknown as boolean } : {})}
+        {...(isPanelOpen ? { inert: true } : {})}
       >
         <KanbanHeader
           project={project}
           issueCount={issues?.length ?? 0}
           defaultStatusId={statuses?.[0]?.id}
+          mobileNav={
+            isMobile ? <MobileSidebar activeProjectId={projectId} /> : undefined
+          }
         />
 
         <div className="flex flex-1 min-h-0">
@@ -73,16 +79,16 @@ export default function KanbanPage() {
       {/* Create Issue Dialog */}
       <CreateIssueDialog />
 
-      {/* Issue Side Panel — fixed, floats above overlay */}
+      {/* Issue Side Panel — fixed, floats above overlay; full-width on mobile */}
       {isPanelOpen && statuses && panel.kind === 'view' ? (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={t('kanban.issueDetails')}
           className="fixed inset-y-0 right-0 z-30 border-l border-border bg-card"
-          style={{ width }}
+          style={{ width: isMobile ? '100%' : width }}
         >
-          <ResizeHandle />
+          {!isMobile ? <ResizeHandle /> : null}
           <IssuePanel
             projectId={projectId}
             statuses={statuses}

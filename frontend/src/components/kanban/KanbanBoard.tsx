@@ -43,7 +43,9 @@ export function KanbanBoard({ projectId }: { projectId: string }) {
   if (statusesLoading || issuesLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-sm text-muted-foreground">{t('kanban.loadingBoard')}</div>
+        <div className="text-sm text-muted-foreground">
+          {t('kanban.loadingBoard')}
+        </div>
       </div>
     )
   }
@@ -68,7 +70,7 @@ export function KanbanBoard({ projectId }: { projectId: string }) {
         }
       }}
     >
-      <div className="flex h-full gap-3 overflow-x-auto p-3">
+      <div className="flex h-full gap-3 overflow-x-auto p-3 snap-x snap-mandatory md:snap-none">
         {statuses.map((status) => (
           <KanbanColumn
             key={status.id}

@@ -13,10 +13,12 @@ export function IssueListPanel({
   projectId,
   activeIssueId,
   projectName,
+  mobileNav,
 }: {
   projectId: string
   activeIssueId: string
   projectName: string
+  mobileNav?: React.ReactNode
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -58,10 +60,13 @@ export function IssueListPanel({
   }
 
   return (
-    <div className="flex flex-col h-full w-[280px] border-r border-border bg-secondary shrink-0">
+    <div className="flex flex-col h-full w-full md:w-[280px] border-r border-border bg-secondary shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between px-3.5 py-2.5 border-b min-h-[45px]">
-        <span className="text-sm font-semibold truncate">{projectName}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          {mobileNav}
+          <span className="text-sm font-semibold truncate">{projectName}</span>
+        </div>
         <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
@@ -172,7 +177,7 @@ function StatusGroup({
                 key={issue.id}
                 type="button"
                 onClick={() => onNavigate(issue.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2 text-left border-b border-border/20 transition-colors ${
+                className={`w-full flex items-center gap-3 px-3.5 py-3 md:py-2 text-left border-b border-border/20 transition-colors ${
                   isActive ? 'bg-accent/70' : 'hover:bg-accent/40'
                 }`}
               >

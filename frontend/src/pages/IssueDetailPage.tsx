@@ -2,11 +2,10 @@ import { useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useProject } from '@/hooks/use-kanban'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { AppSidebar } from '@/components/kanban/AppSidebar'
-import {
-  CreateIssueDialog,
-  CreateIssueForm,
-} from '@/components/kanban/CreateIssueDialog'
+import { MobileSidebar } from '@/components/kanban/MobileSidebar'
+import { CreateIssueDialog } from '@/components/kanban/CreateIssueDialog'
 import { IssueListPanel } from '@/components/issue-detail/IssueListPanel'
 import { ChatArea } from '@/components/issue-detail/ChatArea'
 import { DIFF_MIN_WIDTH } from '@/components/issue-detail/DiffPanel'
@@ -25,11 +24,14 @@ export default function IssueDetailPage() {
   const { data: project, isLoading, isError } = useProject(projectId)
   const [showDiff, setShowDiff] = useState(false)
   const [diffWidth, setDiffWidth] = useState(DEFAULT_DIFF_WIDTH)
+  const isMobile = useIsMobile()
 
-  // Hide list panel when diff panel needs more than 50% of available space
+  // On mobile: show list when no issue selected, show chat when issue selected
+  // On desktop: hide list panel when diff panel needs more than 50% of available space
   const availableWidth =
     typeof window !== 'undefined' ? window.innerWidth - SIDEBAR_WIDTH : 1200
-  const hideListPanel = showDiff && diffWidth > availableWidth * 0.5
+  const hideListPanel =
+    (isMobile && !!issueId) || (showDiff && diffWidth > availableWidth * 0.5)
 
   const handleDiffWidthChange = useCallback((w: number) => {
     // Max = everything except sidebar + min chat area
@@ -61,37 +63,41 @@ export default function IssueDetailPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <AppSidebar activeProjectId={projectId} />
+    <div className="flex h-dvh bg-background text-foreground">
+      {/* Sidebar — hidden on mobile */}
+      {!isMobile ? <AppSidebar activeProjectId={projectId} /> : null}
+
+      {/* Issue list panel — hidden on mobile (replaced by full-page views) */}
       {!hideListPanel ? (
         <IssueListPanel
           projectId={projectId}
           activeIssueId={issueId}
           projectName={project.name}
+          mobileNav={
+            isMobile ? <MobileSidebar activeProjectId={projectId} /> : undefined
+          }
         />
       ) : null}
+
+      {/* Chat area when issue is selected */}
       {issueId ? (
         <ChatArea
           projectId={projectId}
           issueId={issueId}
-          showDiff={showDiff}
+          showDiff={!isMobile && showDiff}
           diffWidth={diffWidth}
           onToggleDiff={() => setShowDiff((v) => !v)}
           onDiffWidthChange={handleDiffWidthChange}
           onCloseDiff={() => setShowDiff(false)}
+          showBackToList={isMobile}
         />
-      ) : (
+      ) : !hideListPanel ? (
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-[580px] rounded-xl">
-            <div className="px-5 pt-4 pb-2">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t('issue.createTask')}
-              </h2>
-            </div>
-            <CreateIssueForm projectId={projectId} autoFocus />
-          </div>
+          <p className="text-sm text-muted-foreground">
+            {t('issue.selectToStart')}
+          </p>
         </div>
-      )}
+      ) : null}
       <CreateIssueDialog />
     </div>
   )

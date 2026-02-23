@@ -36,7 +36,7 @@ export function KanbanColumn({
 
   return (
     <div
-      className={`flex h-full min-w-[260px] flex-1 flex-col rounded-lg border bg-muted/40 ${
+      className={`flex h-full min-w-[85vw] md:min-w-[260px] flex-1 flex-col rounded-lg border bg-muted/40 snap-center md:snap-align-none ${
         isDropTarget ? 'ring-2 ring-primary/20' : ''
       }`}
     >
