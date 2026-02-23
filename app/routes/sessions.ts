@@ -1,8 +1,19 @@
+import { resolve } from 'node:path'
 import { Hono } from 'hono'
 import { getExecutionProcessesBySession } from '../agents/agent-store'
 import { sessionManager } from '../agents/session-manager'
 
 const sessions = new Hono()
+
+function getAllowedRoot(): string {
+  return resolve(process.env.PROJECTS_ROOT ?? process.cwd())
+}
+
+function isWithinAllowedRoot(targetPath: string): boolean {
+  const allowed = getAllowedRoot()
+  const resolved = resolve(targetPath)
+  return resolved === allowed || resolved.startsWith(`${allowed}/`)
+}
 
 // GET /api/projects/:projectId/sessions — List sessions
 sessions.get('/', (c) => {
@@ -24,6 +35,14 @@ sessions.post('/', async (c) => {
 
   if (!body.agentType || !body.prompt) {
     return c.json({ success: false, error: 'agentType and prompt are required' }, 400)
+  }
+
+  // SEC-003: Validate workingDir is within allowed root
+  if (body.workingDir) {
+    const resolvedDir = resolve(body.workingDir)
+    if (!isWithinAllowedRoot(resolvedDir)) {
+      return c.json({ success: false, error: 'workingDir is outside the allowed root' }, 400)
+    }
   }
 
   const session = sessionManager.createSession({

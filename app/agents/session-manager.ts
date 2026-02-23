@@ -9,6 +9,21 @@ import {
 } from './agent-store'
 import { agentRegistry } from './executors'
 import { processManager } from './process-manager'
+import { BUILT_IN_PROFILES } from './types'
+
+function getPermissionOptions(agentType: AgentType): {
+  permissionMode: string
+  dangerouslySkipPermissions: boolean
+} {
+  const profile = BUILT_IN_PROFILES[agentType]
+  const policy = profile?.permissionPolicy ?? 'supervised'
+
+  if (policy === 'bypass') {
+    return { permissionMode: 'bypass', dangerouslySkipPermissions: true }
+  }
+
+  return { permissionMode: policy, dangerouslySkipPermissions: false }
+}
 
 export class SessionManager {
   createSession(options: {
@@ -45,14 +60,17 @@ export class SessionManager {
     // Determine working directory
     const workingDir = session.workingDir ?? process.cwd()
 
+    // SEC-003: Resolve permission options from agent profile
+    const permOptions = getPermissionOptions(session.agentType)
+
     // Spawn the agent
     const spawned = await executor.spawn(
       {
         workingDir,
         prompt: session.prompt,
         model: session.model,
-        permissionMode: 'bypass',
-        dangerouslySkipPermissions: true,
+        permissionMode: permOptions.permissionMode as any,
+        dangerouslySkipPermissions: permOptions.dangerouslySkipPermissions,
       },
       {
         vars: {},
@@ -115,14 +133,17 @@ export class SessionManager {
 
     const workingDir = session.workingDir ?? process.cwd()
 
+    // SEC-003: Resolve permission options from agent profile
+    const permOptions = getPermissionOptions(session.agentType)
+
     const spawned = await executor.spawnFollowUp(
       {
         workingDir,
         prompt,
         sessionId: session.externalSessionId,
         model: session.model,
-        permissionMode: 'bypass',
-        dangerouslySkipPermissions: true,
+        permissionMode: permOptions.permissionMode as any,
+        dangerouslySkipPermissions: permOptions.dangerouslySkipPermissions,
       },
       {
         vars: {},

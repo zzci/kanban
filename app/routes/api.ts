@@ -83,8 +83,6 @@ function getRuntimeInfo() {
       pid: process.pid,
       ppid: process.ppid,
       title: process.title,
-      argv: process.argv,
-      execPath: process.execPath,
       cwd: process.cwd(),
       uptimeSeconds: process.uptime(),
       platform: process.platform,
@@ -116,8 +114,19 @@ apiRoutes.get('/health', async (c) => {
   })
 })
 
+// SEC-004: Gate /api/runtime behind NODE_ENV !== 'production'
 apiRoutes.get('/runtime', (c) => {
-  return c.json(getRuntimeInfo())
+  if (process.env.NODE_ENV === 'production') {
+    return c.json({ success: false, error: 'Not Found' }, 404)
+  }
+
+  // In dev mode, strip sensitive process info (argv, execPath)
+  const info = getRuntimeInfo()
+  // Remove execPath from signals to avoid leaking binary path
+  if (info.signals) {
+    delete (info.signals as Record<string, unknown>).execPath
+  }
+  return c.json(info)
 })
 
 export default apiRoutes
