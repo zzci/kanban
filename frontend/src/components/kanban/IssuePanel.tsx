@@ -3,6 +3,7 @@ import { X, Maximize2, Link } from 'lucide-react'
 import type { Issue, Status, Tag } from '@/types/kanban'
 import { Badge } from '@/components/ui/badge'
 import { PriorityIcon } from './PriorityIcon'
+import { ChatInput } from '@/components/issue-detail/ChatInput'
 
 interface IssuePanelProps {
   projectId: string
@@ -164,6 +165,9 @@ export function IssuePanel({
           </div>
         ) : null}
       </div>
+
+      {/* Chat input */}
+      {issue ? <ChatInput /> : null}
     </div>
   )
 }
