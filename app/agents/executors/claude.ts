@@ -11,6 +11,7 @@ import type {
   ToolAction,
 } from '../types'
 import { CommandBuilder } from '../command'
+import { classifyCommand } from '../logs'
 
 const BASE_COMMAND = 'npx -y @anthropic-ai/claude-code@latest'
 
@@ -398,20 +399,6 @@ function classifyToolAction(toolName: string, input: Record<string, unknown>): T
     default:
       return { kind: 'tool', toolName, arguments: input }
   }
-}
-
-// Helper: classify shell commands
-function classifyCommand(command: string): 'read' | 'search' | 'edit' | 'fetch' | 'other' {
-  const cmd = command.trim().split(/\s+/)[0] ?? ''
-  if (['cat', 'head', 'tail', 'ls', 'less', 'more'].includes(cmd))
-    return 'read'
-  if (['grep', 'rg', 'find', 'awk', 'ag'].includes(cmd))
-    return 'search'
-  if (command.includes('>') || ['sed', 'rm', 'mv', 'cp', 'mkdir', 'touch'].includes(cmd))
-    return 'edit'
-  if (['curl', 'wget'].includes(cmd))
-    return 'fetch'
-  return 'other'
 }
 
 // Helper: parse `claude models` output into AgentModel[]

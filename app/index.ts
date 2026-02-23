@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { serveStatic } from 'hono/bun'
+import { processManager } from './agents/process-manager'
 import app from './app'
 import { logger } from './logger'
 
@@ -62,6 +63,10 @@ async function shutdown(signal: string) {
   isShuttingDown = true
 
   logger.warn('server_shutdown', { signal })
+
+  // Cancel all active agent processes before shutting down
+  await processManager.cancelAll()
+
   http.stop()
   logger.info('server_stopped')
   process.exit(0)

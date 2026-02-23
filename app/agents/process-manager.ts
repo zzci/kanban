@@ -14,13 +14,17 @@ export interface ManagedProcess {
 
 type StateChangeCallback = (executionId: string, state: ProcessStatus) => void
 type LogCallback = (executionId: string, entry: NormalizedLogEntry) => void
+type UnsubscribeFn = () => void
 
 const MAX_LOG_ENTRIES = 10000
+const AUTO_CLEANUP_DELAY_MS = 5 * 60 * 1000 // 5 minutes
 
 export class ProcessManager {
   private processes = new Map<string, ManagedProcess>()
-  private stateChangeCallbacks: StateChangeCallback[] = []
-  private logCallbacks: LogCallback[] = []
+  private stateChangeCallbacks = new Map<number, StateChangeCallback>()
+  private logCallbacks = new Map<number, LogCallback>()
+  private cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  private nextCallbackId = 0
 
   register(
     executionId: string,
@@ -97,16 +101,49 @@ export class ProcessManager {
     await Promise.all(active.map(p => this.cancel(p.executionId)))
   }
 
-  onStateChange(callback: StateChangeCallback): void {
-    this.stateChangeCallbacks.push(callback)
+  cleanup(executionId: string): void {
+    // Clear any pending auto-cleanup timer
+    const timer = this.cleanupTimers.get(executionId)
+    if (timer) {
+      clearTimeout(timer)
+      this.cleanupTimers.delete(executionId)
+    }
+    this.processes.delete(executionId)
   }
 
-  onLog(callback: LogCallback): void {
-    this.logCallbacks.push(callback)
+  onStateChange(callback: StateChangeCallback): UnsubscribeFn {
+    const id = this.nextCallbackId++
+    this.stateChangeCallbacks.set(id, callback)
+    return () => {
+      this.stateChangeCallbacks.delete(id)
+    }
+  }
+
+  onLog(callback: LogCallback): UnsubscribeFn {
+    const id = this.nextCallbackId++
+    this.logCallbacks.set(id, callback)
+    return () => {
+      this.logCallbacks.delete(id)
+    }
   }
 
   getLogs(executionId: string): NormalizedLogEntry[] {
     return this.processes.get(executionId)?.logs ?? []
+  }
+
+  private scheduleAutoCleanup(executionId: string): void {
+    // Clear any existing timer for this execution
+    const existing = this.cleanupTimers.get(executionId)
+    if (existing) {
+      clearTimeout(existing)
+    }
+
+    const timer = setTimeout(() => {
+      this.cleanupTimers.delete(executionId)
+      this.processes.delete(executionId)
+    }, AUTO_CLEANUP_DELAY_MS)
+
+    this.cleanupTimers.set(executionId, timer)
   }
 
   private async consumeStream(
@@ -153,11 +190,17 @@ export class ProcessManager {
       managed.exitCode = exitCode
       managed.finishedAt = new Date()
 
-      if (managed.state === 'cancelled')
-        return // Already handled
+      if (managed.state === 'cancelled') {
+        // Already handled, but still schedule cleanup
+        this.scheduleAutoCleanup(executionId)
+        return
+      }
 
       managed.state = exitCode === 0 ? 'completed' : 'failed'
       this.emitStateChange(executionId, managed.state)
+
+      // Schedule auto-cleanup for terminal states
+      this.scheduleAutoCleanup(executionId)
     }
     catch {
       const managed = this.processes.get(executionId)
@@ -165,12 +208,13 @@ export class ProcessManager {
         managed.state = 'failed'
         managed.finishedAt = new Date()
         this.emitStateChange(executionId, 'failed')
+        this.scheduleAutoCleanup(executionId)
       }
     }
   }
 
   private emitStateChange(executionId: string, state: ProcessStatus): void {
-    for (const cb of this.stateChangeCallbacks) {
+    for (const cb of this.stateChangeCallbacks.values()) {
       try {
         cb(executionId, state)
       }
@@ -181,7 +225,7 @@ export class ProcessManager {
   }
 
   private emitLog(executionId: string, entry: NormalizedLogEntry): void {
-    for (const cb of this.logCallbacks) {
+    for (const cb of this.logCallbacks.values()) {
       try {
         cb(executionId, entry)
       }
@@ -194,11 +238,3 @@ export class ProcessManager {
 
 // Singleton instance
 export const processManager = new ProcessManager()
-
-// Cleanup on server shutdown
-process.on('SIGINT', async () => {
-  await processManager.cancelAll()
-})
-process.on('SIGTERM', async () => {
-  await processManager.cancelAll()
-})
