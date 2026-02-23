@@ -2,6 +2,7 @@ import type {
   AgentAvailability,
   AgentCapability,
   AgentExecutor,
+  AgentModel,
   ExecutionEnv,
   FollowUpOptions,
   NormalizedLogEntry,
@@ -231,6 +232,31 @@ export class ClaudeCodeExecutor implements AgentExecutor {
     }
   }
 
+  async getModels(): Promise<AgentModel[]> {
+    try {
+      // Run `claude models` to get available models
+      const proc = Bun.spawn(['claude', 'models'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+        env: { ...process.env, NPM_CONFIG_LOGLEVEL: 'error' },
+      })
+
+      const timer = setTimeout(() => proc.kill(), 10000)
+      const exitCode = await proc.exited
+      clearTimeout(timer)
+
+      if (exitCode !== 0) {
+        return []
+      }
+
+      const stdout = await new Response(proc.stdout).text()
+      return parseClaudeModelsOutput(stdout)
+    }
+    catch {
+      return []
+    }
+  }
+
   normalizeLog(rawLine: string): NormalizedLogEntry | null {
     try {
       const data = JSON.parse(rawLine)
@@ -386,4 +412,48 @@ function classifyCommand(command: string): 'read' | 'search' | 'edit' | 'fetch' 
   if (['curl', 'wget'].includes(cmd))
     return 'fetch'
   return 'other'
+}
+
+// Helper: parse `claude models` output into AgentModel[]
+// Output format is typically lines like:
+//   claude-sonnet-4-6 (default)
+//   claude-opus-4-6
+//   claude-haiku-4-5
+function parseClaudeModelsOutput(stdout: string): AgentModel[] {
+  const models: AgentModel[] = []
+  for (const line of stdout.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed)
+      continue
+
+    // Skip header/separator lines
+    if (
+      trimmed.startsWith('-')
+      || trimmed.startsWith('=')
+      || trimmed.toLowerCase().startsWith('available')
+    ) {
+      continue
+    }
+
+    // Extract model id and check for (default) marker
+    const defaultMatch = trimmed.match(/^(\S+)\s*\(default\)/i)
+    if (defaultMatch) {
+      models.push({
+        id: defaultMatch[1]!,
+        name: defaultMatch[1]!,
+        description: 'default',
+      })
+      continue
+    }
+
+    // Plain model id line
+    const idMatch = trimmed.match(/^(\S+)/)
+    if (idMatch) {
+      models.push({
+        id: idMatch[1]!,
+        name: idMatch[1]!,
+      })
+    }
+  }
+  return models
 }

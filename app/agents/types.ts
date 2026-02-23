@@ -84,7 +84,6 @@ export interface AgentProfile {
   protocol: AgentProtocol
   capabilities: AgentCapability[]
   defaultModel?: string
-  availableModels: AgentModel[]
   permissionPolicy: PermissionPolicy
   config?: Record<string, unknown>
 }
@@ -199,6 +198,7 @@ export interface AgentExecutor {
   spawnFollowUp: (options: FollowUpOptions, env: ExecutionEnv) => Promise<SpawnedProcess>
   cancel: (process: SpawnedProcess) => Promise<void>
   getAvailability: () => Promise<AgentAvailability>
+  getModels: () => Promise<AgentModel[]>
   normalizeLog: (rawLine: string) => NormalizedLogEntry | null
 }
 
@@ -208,6 +208,7 @@ export interface AgentRegistry {
   get: (agentType: AgentType) => AgentExecutor | undefined
   getAll: () => AgentExecutor[]
   getAvailable: () => Promise<AgentAvailability[]>
+  getModels: (agentType: AgentType) => Promise<AgentModel[]>
 }
 
 // ---------- Constants ----------
@@ -221,23 +222,6 @@ export const BUILT_IN_PROFILES: Record<AgentType, AgentProfile> = {
     protocol: 'stream-json',
     capabilities: ['session-fork', 'context-usage', 'plan-mode'],
     defaultModel: 'claude-sonnet-4-6',
-    availableModels: [
-      {
-        id: 'claude-sonnet-4-6',
-        name: 'Claude Sonnet 4.6',
-        description: 'Best coding model, fast and capable',
-      },
-      {
-        id: 'claude-opus-4-6',
-        name: 'Claude Opus 4.6',
-        description: 'Deepest reasoning, complex tasks',
-      },
-      {
-        id: 'claude-haiku-4-5',
-        name: 'Claude Haiku 4.5',
-        description: 'Fastest, lightweight tasks',
-      },
-    ],
     permissionPolicy: 'bypass',
   },
   'codex': {
@@ -247,11 +231,6 @@ export const BUILT_IN_PROFILES: Record<AgentType, AgentProfile> = {
     protocol: 'json-rpc',
     capabilities: ['session-fork', 'setup-helper', 'context-usage', 'sandbox', 'reasoning'],
     defaultModel: 'o4-mini',
-    availableModels: [
-      { id: 'o4-mini', name: 'o4-mini', description: 'Default reasoning model' },
-      { id: 'o3', name: 'o3', description: 'Advanced reasoning' },
-      { id: 'gpt-4.1', name: 'GPT-4.1', description: 'General purpose' },
-    ],
     permissionPolicy: 'auto',
   },
   'gemini': {
@@ -261,10 +240,6 @@ export const BUILT_IN_PROFILES: Record<AgentType, AgentProfile> = {
     protocol: 'acp',
     capabilities: ['session-fork'],
     defaultModel: 'gemini-2.5-pro',
-    availableModels: [
-      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: 'Most capable, deep thinking' },
-      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Fast and efficient' },
-    ],
     permissionPolicy: 'auto',
   },
 }

@@ -1,4 +1,10 @@
-import type { AgentAvailability, AgentExecutor, AgentRegistry, AgentType } from '../types'
+import type {
+  AgentAvailability,
+  AgentExecutor,
+  AgentModel,
+  AgentRegistry,
+  AgentType,
+} from '../types'
 import { ClaudeCodeExecutor } from './claude'
 import { CodexExecutor } from './codex'
 import { GeminiExecutor } from './gemini'
@@ -27,10 +33,15 @@ class DefaultAgentRegistry implements AgentRegistry {
   }
 
   async getAvailable(): Promise<AgentAvailability[]> {
-    const results = await Promise.all(
-      this.getAll().map(executor => executor.getAvailability()),
-    )
+    const results = await Promise.all(this.getAll().map(executor => executor.getAvailability()))
     return results
+  }
+
+  async getModels(agentType: AgentType): Promise<AgentModel[]> {
+    const executor = this.executors.get(agentType)
+    if (!executor)
+      return []
+    return executor.getModels()
   }
 }
 

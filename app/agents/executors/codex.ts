@@ -2,6 +2,7 @@ import type {
   AgentAvailability,
   AgentCapability,
   AgentExecutor,
+  AgentModel,
   ExecutionEnv,
   FollowUpOptions,
   NormalizedLogEntry,
@@ -112,6 +113,42 @@ export class CodexExecutor implements AgentExecutor {
         authStatus: 'unknown',
         error: error instanceof Error ? error.message : 'Unknown error',
       }
+    }
+  }
+
+  async getModels(): Promise<AgentModel[]> {
+    try {
+      // Codex uses OpenAI models — query via `codex --list-models` or OpenAI API
+      // TODO: Implement proper model discovery when Codex CLI supports it
+      const proc = Bun.spawn(['npx', '-y', '@openai/codex@latest', '--list-models'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+        env: { ...process.env, NPM_CONFIG_LOGLEVEL: 'error' },
+      })
+
+      const timer = setTimeout(() => proc.kill(), 10000)
+      const exitCode = await proc.exited
+      clearTimeout(timer)
+
+      if (exitCode !== 0) {
+        return []
+      }
+
+      const stdout = await new Response(proc.stdout).text()
+      const models: AgentModel[] = []
+      for (const line of stdout.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed)
+          continue
+        const idMatch = trimmed.match(/^(\S+)/)
+        if (idMatch) {
+          models.push({ id: idMatch[1]!, name: idMatch[1]! })
+        }
+      }
+      return models
+    }
+    catch {
+      return []
     }
   }
 
