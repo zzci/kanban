@@ -73,8 +73,8 @@ export class SessionManager {
     processManager.register(execRecord.id, sessionId, spawned, line =>
       executor.normalizeLog(line))
 
-    // Monitor completion
-    processManager.onStateChange((execId, state) => {
+    // Monitor completion — store unsubscribe to clean up when done
+    const unsubscribe = processManager.onStateChange((execId, state) => {
       if (execId !== execRecord.id)
         return
       updateExecutionProcess(execId, {
@@ -86,6 +86,7 @@ export class SessionManager {
       })
       if (state === 'completed' || state === 'failed' || state === 'cancelled') {
         updateAgentSession(sessionId, { status: state })
+        unsubscribe()
       }
     })
 
@@ -140,6 +141,23 @@ export class SessionManager {
 
     processManager.register(execRecord.id, sessionId, spawned, line =>
       executor.normalizeLog(line))
+
+    // Monitor completion — store unsubscribe to clean up when done
+    const unsubscribe = processManager.onStateChange((execId, state) => {
+      if (execId !== execRecord.id)
+        return
+      updateExecutionProcess(execId, {
+        status: state,
+        finishedAt:
+          state === 'completed' || state === 'failed' || state === 'cancelled'
+            ? new Date().toISOString()
+            : undefined,
+      })
+      if (state === 'completed' || state === 'failed' || state === 'cancelled') {
+        updateAgentSession(sessionId, { status: state })
+        unsubscribe()
+      }
+    })
 
     return { executionId: execRecord.id, process: spawned }
   }

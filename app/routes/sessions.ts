@@ -1,6 +1,20 @@
+import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
+import { z } from 'zod'
 import { getExecutionProcessesBySession } from '../agents/agent-store'
 import { sessionManager } from '../agents/session-manager'
+
+const createSessionSchema = z.object({
+  agentType: z.enum(['claude-code', 'codex', 'gemini']),
+  prompt: z.string().min(1).max(32768),
+  issueId: z.string().optional(),
+  workingDir: z.string().max(1000).optional(),
+  model: z.string().regex(/^[\w.-]{1,100}$/).optional(),
+})
+
+const followUpSchema = z.object({
+  prompt: z.string().min(1).max(32768),
+})
 
 const sessions = new Hono()
 
@@ -12,23 +26,17 @@ sessions.get('/', (c) => {
 })
 
 // POST /api/projects/:projectId/sessions — Create session
-sessions.post('/', async (c) => {
-  const projectId = c.req.param('projectId')!
-  const body = await c.req.json<{
-    agentType: string
-    prompt: string
-    issueId?: string
-    workingDir?: string
-    model?: string
-  }>()
-
-  if (!body.agentType || !body.prompt) {
-    return c.json({ success: false, error: 'agentType and prompt are required' }, 400)
+sessions.post('/', zValidator('json', createSessionSchema, (result, c) => {
+  if (!result.success) {
+    return c.json({ success: false, error: result.error.issues.map(i => i.message).join(', ') }, 400)
   }
+}), (c) => {
+  const projectId = c.req.param('projectId')!
+  const body = c.req.valid('json')
 
   const session = sessionManager.createSession({
     projectId,
-    agentType: body.agentType as any,
+    agentType: body.agentType,
     prompt: body.prompt,
     issueId: body.issueId,
     workingDir: body.workingDir,
@@ -70,13 +78,13 @@ sessions.post('/:id/execute', async (c) => {
 })
 
 // POST /api/projects/:projectId/sessions/:id/follow-up — Follow-up
-sessions.post('/:id/follow-up', async (c) => {
-  const id = c.req.param('id')
-  const body = await c.req.json<{ prompt: string }>()
-
-  if (!body.prompt) {
-    return c.json({ success: false, error: 'prompt is required' }, 400)
+sessions.post('/:id/follow-up', zValidator('json', followUpSchema, (result, c) => {
+  if (!result.success) {
+    return c.json({ success: false, error: result.error.issues.map(i => i.message).join(', ') }, 400)
   }
+}), async (c) => {
+  const id = c.req.param('id')
+  const body = c.req.valid('json')
 
   try {
     const result = await sessionManager.followUpSession(id, body.prompt)
