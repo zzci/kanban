@@ -77,7 +77,7 @@ function ProjectButton({
 }
 
 export function AppSidebar({ activeProjectId }: { activeProjectId: string }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { data: projects } = useProjects()

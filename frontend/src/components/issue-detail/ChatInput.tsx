@@ -112,7 +112,7 @@ export function ChatInput({
             onPaste={handlePaste}
             placeholder={t('chat.placeholder')}
             rows={1}
-            className="w-full bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground/50 min-h-[24px]"
+            className="w-full bg-transparent text-base md:text-sm resize-none outline-none placeholder:text-muted-foreground/50 min-h-[24px]"
           />
         </div>
 

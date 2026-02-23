@@ -63,7 +63,7 @@ export default function IssueDetailPage() {
   }
 
   return (
-    <div className="flex h-dvh bg-background text-foreground">
+    <div className="flex h-dvh bg-background text-foreground overflow-hidden">
       {/* Sidebar — hidden on mobile */}
       {!isMobile ? <AppSidebar activeProjectId={projectId} /> : null}
 
