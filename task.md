@@ -1,6 +1,6 @@
 # Kanban App — Task List
 
-> Updated: 2026-02-23
+> Updated: 2026-02-23 15:00
 
 ## Usage
 
@@ -192,3 +192,102 @@
   - activeForm: Splitting executor per agent
   - createdAt: 2026-02-23 14:00
   - blocked by: AGENT-005
+
+- [x] **SEC-001 Add authentication middleware to all API routes** `P0`
+  - description: No route has authentication. Any HTTP client can CRUD projects/issues, execute AI agents, and browse the filesystem. Add API key or JWT middleware gating all `/api/*` routes. At minimum support `Authorization: Bearer <token>` with a server-side secret from env var.
+  - activeForm: Adding authentication middleware
+  - createdAt: 2026-02-23 14:30
+  - blocks: SEC-002, SEC-003, SEC-004
+
+- [x] **SEC-002 Restrict filesystem endpoint to allowed roots** `P0`
+  - description: `/api/filesystem/dirs` accepts arbitrary `path` query param — `?path=/etc` enumerates the whole server. Validate that resolved path starts with an allowed root (e.g. `process.cwd()` or `PROJECTS_ROOT` env var). Return 403 for paths outside the allowlist. Location: `app/routes/filesystem.ts`.
+  - activeForm: Restricting filesystem endpoint
+  - createdAt: 2026-02-23 14:30
+
+- [x] **SEC-003 Remove hardcoded dangerouslySkipPermissions and validate workingDir** `P0`
+  - description: `session-manager.ts` hardcodes `permissionMode:'bypass'` and `dangerouslySkipPermissions:true` for all agent executions. User-supplied `workingDir` is passed directly to subprocess with no validation. Fix: respect agent profile's `permissionPolicy`, validate `workingDir` against project directory allowlist, never default to skip-permissions. Location: `app/agents/session-manager.ts:54-55,124-125`, `app/routes/sessions.ts:34`.
+  - activeForm: Fixing permission bypass and workingDir validation
+  - createdAt: 2026-02-23 14:30
+
+- [x] **SEC-004 Remove or restrict /api/runtime endpoint** `P0`
+  - description: `/api/runtime` exposes `process.argv`, `execPath`, `cwd`, `pid`, env vars — aids attacker fingerprinting. Either remove entirely, gate behind auth + NODE_ENV=development check, or strip sensitive fields (argv, execPath). Location: `app/routes/api.ts:67-100`.
+  - activeForm: Restricting runtime info endpoint
+  - createdAt: 2026-02-23 14:30
+
+- [x] **SEC-005 Add security headers, CORS, and rate limiting** `P1`
+  - description: No security headers (CSP, X-Frame-Options, HSTS, nosniff), no CORS config, no rate limiting. Add `hono/secure-headers` middleware, explicit CORS via `hono/cors` scoped to allowed origins, and rate limiting on session/execute endpoints (e.g. 10 req/min). Location: `app/app.ts`.
+  - activeForm: Adding security headers and rate limiting
+  - createdAt: 2026-02-23 14:30
+
+- [x] **API-001 Add Zod input validation on all API routes** `P1`
+  - description: All POST/PATCH routes use `c.req.json<T>()` which is compile-time only — zero runtime validation. `as any` cast on agentType, `as 'urgent'|...` cast on priority. Add `@hono/zod-validator` with schemas for every route. Validate enums (priority, agentType), string lengths (title ≤500, prompt ≤32KB), and required fields. Affected: all files in `app/routes/`.
+  - activeForm: Adding Zod validation to routes
+  - createdAt: 2026-02-23 14:30
+
+- [x] **API-002 Add global error handler and fix JSON parse crashes** `P1`
+  - description: Malformed JSON body crashes handlers (no try/catch around `c.req.json()`). No global error handler — stack traces may leak in dev. Add `app.onError()` in `app.ts` returning standardized `{success:false, error}` envelope. Log errors via winston. Also fix inconsistent envelope on 404, health, runtime endpoints.
+  - activeForm: Adding global error handler
+  - createdAt: 2026-02-23 14:30
+
+- [x] **API-003 Add cross-project ownership checks on all data operations** `P1`
+  - description: `getIssue()` ignores projectId — issues accessible across projects. Same for tags (cross-project assignment) and bulk update (operates on any project's issues). Fix: verify `issue.projectId === routeProjectId` in GET/PATCH single issue, verify tag+issue belong to project before assignment, filter bulk update IDs by project. Also add project existence middleware for all `/api/projects/:projectId/*` routes. Affected: `routes/issues.ts`, `routes/tags.ts`, `db/memory-store.ts`.
+  - activeForm: Adding project ownership checks
+  - createdAt: 2026-02-23 14:30
+
+- [x] **API-004 Fix ProcessManager memory leak** `P2`
+  - description: `ProcessManager.processes` map grows indefinitely — no cleanup for finished processes. `onStateChange`/`onLog` callbacks accumulate per execution (registered in session-manager, never unregistered). Fix: add TTL-based cleanup for completed processes, return unsubscribe functions from `onStateChange`/`onLog`, clean up on execution completion. Also fix conflicting SIGINT/SIGTERM handlers between `index.ts` and `process-manager.ts`. Location: `app/agents/process-manager.ts`, `app/agents/session-manager.ts`.
+  - activeForm: Fixing process manager memory leak
+  - createdAt: 2026-02-23 14:30
+
+- [x] **FE-001 Fix TypeScript error in dnd-kit drag handler** `P1`
+  - description: `DragEvent` type in board-store is derived from `onDragOver` but used for `onDragEnd` which has additional `cancelable`/`preventDefault` properties. TS2345 error blocks `tsc --noEmit`. Fix: define separate event types or use a more general type. Location: `frontend/src/stores/board-store.ts:6-8`, `frontend/src/components/kanban/KanbanBoard.tsx:73`.
+  - activeForm: Fixing dnd-kit type error
+  - createdAt: 2026-02-23 14:30
+
+- [x] **FE-002 Fix missing i18n keys and hardcoded English strings** `P1`
+  - description: Missing key `viewMode.switchView` in both en.json and zh.json (used in AppSidebar:280). Hardcoded "Kanban" and "List" strings in HomePage, AppSidebar, KanbanHeader bypass i18n. Add missing keys to both translation files and replace hardcoded strings with `t()` calls.
+  - activeForm: Fixing i18n gaps
+  - createdAt: 2026-02-23 14:30
+
+- [x] **FE-003 Normalize query keys and add enabled guards** `P1`
+  - description: Query keys inconsistent — `['issues', projectId]` vs `['projects', projectId, 'issues', issueId]` breaks cache invalidation. `['project', pid]` (singular) vs `['projects']` (plural). Hooks fire with empty projectId (no `enabled` guard). Fix: create `queryKeys` factory with hierarchical keys, add `enabled: !!projectId` to all hooks. Location: `frontend/src/hooks/use-kanban.ts`.
+  - activeForm: Normalizing query keys
+  - createdAt: 2026-02-23 14:30
+
+- [x] **FE-004 Extract shared utilities and eliminate duplication** `P1`
+  - description: Duplicated across 2-3+ files each: `getProjectInitials` (HomePage, AppSidebar, MobileSidebar), `formatSize` (CreateIssueDialog, FilePreviewDialog), `LANGUAGES` constant (3 files), click-outside pattern (8+ components — only CreateIssueDialog has a hook, not exported). Extract `useClickOutside` to `hooks/use-click-outside.ts`, utilities to `lib/format.ts`, constants to `lib/constants.ts`.
+  - activeForm: Extracting shared utilities
+  - createdAt: 2026-02-23 14:30
+
+- [x] **FE-005 Refactor ReviewDialog to use Radix Dialog primitive** `P1`
+  - description: ReviewDialog builds custom overlay, escape-key, click-outside from scratch. Missing focus trap, aria-modal, role="dialog". Replace with existing `<Dialog>/<DialogContent>` components from `components/ui/dialog.tsx` which wraps Radix UI with proper accessibility. Location: `frontend/src/components/issue-detail/ReviewDialog.tsx`.
+  - activeForm: Refactoring ReviewDialog
+  - createdAt: 2026-02-23 14:30
+
+- [ ] **ARCH-001 Introduce repository interface for data layer** `P2`
+  - description: Memory store and Drizzle ORM have no shared interface — migration will require rewriting every route handler. Create `app/db/repository.ts` with interfaces (IssueRepository, ProjectRepository, etc.) that both memory-store and future Drizzle implementation satisfy. Route handlers import from repository, not memory-store directly. Also add Drizzle schema for kanban entities (projects, issues, statuses, tags).
+  - activeForm: Creating repository abstraction
+  - createdAt: 2026-02-23 14:30
+
+- [x] **ARCH-002 Add Suspense fallback and ErrorBoundary** `P2`
+  - description: `Suspense` in main.tsx has no `fallback` — blank screen during lazy load. No `ErrorBoundary` anywhere — runtime errors show blank screen. Add loading spinner fallback to Suspense, add React ErrorBoundary wrapping routes. Location: `frontend/src/main.tsx`.
+  - activeForm: Adding Suspense fallback and ErrorBoundary
+  - createdAt: 2026-02-23 14:30
+
+- [x] **ARCH-003 Configure QueryClient default options** `P2`
+  - description: QueryClient created with no defaults — `staleTime:0` causes refetch on every mount, `retry:3` is aggressive for in-memory backend. Set sensible defaults: `staleTime:30s`, `retry:1`. Location: `frontend/src/main.tsx:13`.
+  - activeForm: Configuring QueryClient defaults
+  - createdAt: 2026-02-23 14:30
+
+- [x] **CLEAN-001 Deduplicate backend code** `P3`
+  - description: `classifyCommand` duplicated in `agents/logs.ts` and `agents/executors/claude.ts`. `DEFAULT_STATUSES` defined twice in memory-store. Seed data (~400 lines) embedded in store module. Fix: single export from logs.ts, extract DEFAULT_STATUSES constant, move seed data to `app/db/seed-data.ts`.
+  - activeForm: Deduplicating backend code
+  - createdAt: 2026-02-23 14:30
+
+- [x] **CLEAN-002 Fix inconsistent priority icons** `P3`
+  - description: PriorityIcon maps urgent→Flame, high→AlertTriangle, medium→ArrowUp. IssueDetail maps urgent→AlertTriangle, high→ArrowUp, medium→Minus. Users see different icons for same priority between kanban board and detail page. Fix: use PriorityIcon component in IssueDetail.tsx. Location: `frontend/src/components/kanban/PriorityIcon.tsx`, `frontend/src/components/issue-detail/IssueDetail.tsx`.
+  - activeForm: Fixing priority icon inconsistency
+  - createdAt: 2026-02-23 14:30
+
+- [x] **CLEAN-003 Fix board-store magic timeout and wire ChatInput** `P3`
+  - description: board-store uses arbitrary 500ms `setTimeout` to reset `isDragging` — should be tied to mutation `onSettled`. ChatInput send button has no `onClick` handler (stub). Fix: reset isDragging in `onSettled` callback, either wire send handler or visually mark chat as "coming soon". Location: `frontend/src/stores/board-store.ts:59`, `frontend/src/components/issue-detail/ChatInput.tsx:191`.

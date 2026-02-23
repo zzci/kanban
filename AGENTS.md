@@ -45,11 +45,21 @@ bun run db:reset             # deletes SQLite DB files (data/kanban.db)
 - **Logging**: winston (`app/logger.ts`)
 - **Static serving**: In production, `app/index.ts` serves `frontend/dist/` with SPA fallback
 
+#### Security & Middleware (`app/app.ts`)
+
+- **Auth**: `Authorization: Bearer <token>` middleware gated by `API_SECRET` env var. If unset (dev mode), all requests pass. Health endpoint exempt.
+- **Security headers**: `hono/secure-headers` (X-Frame-Options, X-Content-Type-Options, etc.)
+- **CORS**: `hono/cors` with `ALLOWED_ORIGIN` env var (defaults to `*`)
+- **Rate limiting**: In-memory limiter on session execute endpoint (10 req/min per IP)
+- **Global error handler**: `app.onError()` returns `{success: false, error}` envelope; logs via winston
+- **Input validation**: All POST/PATCH routes use `@hono/zod-validator` with Zod schemas for runtime type checking
+
 #### Data Layer (Important)
 
 The backend has two data backends — **only the in-memory store is wired up to routes currently**:
 
-- `app/db/memory-store.ts` — In-memory store with seed data for 4 demo projects (each with statuses, issues, tags). All route handlers (`app/routes/*.ts`) import from here. Data resets on server restart.
+- `app/db/memory-store.ts` — In-memory store with cross-project ownership validation. All route handlers import from here. Data resets on server restart.
+- `app/db/seed-data.ts` — Seed data for 4 demo projects (statuses, issues, tags) and `DEFAULT_STATUSES` constant, extracted from memory-store.
 - `app/db/index.ts` + `app/db/schema.ts` — SQLite/Drizzle ORM setup (exists but not used by routes yet). The `runtimeEvents` table is the only schema defined so far.
 
 When adding new features, use the memory store pattern unless migrating to persistent storage.
@@ -61,15 +71,22 @@ All routes are project-scoped under `/api/projects/:projectId/...`:
 ```
 GET/POST       /api/projects
 GET/PATCH      /api/projects/:projectId
-GET            /api/projects/:projectId/statuses
+GET/POST       /api/projects/:projectId/statuses
+PATCH          /api/projects/:projectId/statuses/:id
 GET/POST       /api/projects/:projectId/issues
 PATCH          /api/projects/:projectId/issues/bulk
 GET/PATCH      /api/projects/:projectId/issues/:id
-GET            /api/projects/:projectId/tags
+GET/POST       /api/projects/:projectId/tags
+DELETE         /api/projects/:projectId/tags/:tagId
 POST/DELETE    /api/projects/:projectId/issues/:issueId/tags/:tagId
+POST           /api/projects/:projectId/sessions
+POST           /api/projects/:projectId/sessions/:id/execute
+POST           /api/projects/:projectId/sessions/:id/follow-up
+POST           /api/projects/:projectId/sessions/:id/cancel
+GET            /api/projects/:projectId/sessions/:id/logs
 ```
 
-All API responses use the envelope `{ success: true, data: T } | { success: false, error: string }`.
+All API responses use the envelope `{ success: true, data: T } | { success: false, error: string }`. All routes validate that the project exists and enforce cross-project ownership (issues, tags, statuses scoped to their project).
 
 ### Frontend (`frontend/`)
 
@@ -88,9 +105,9 @@ All API responses use the envelope `{ success: true, data: T } | { success: fals
 
 Two state systems, each with a distinct role:
 
-- **TanStack React Query** — Server state (projects, issues, statuses, tags). All hooks in `frontend/src/hooks/use-kanban.ts`. Query keys follow `['entity', projectId]` pattern. The `useBulkUpdateIssues` hook uses optimistic updates.
+- **TanStack React Query** — Server state (projects, issues, statuses, tags). All hooks in `frontend/src/hooks/use-kanban.ts`. Query keys use a `queryKeys` factory with hierarchical keys (e.g. `['projects', projectId, 'issues']`). All hooks have `enabled` guards. `useBulkUpdateIssues` uses optimistic updates. QueryClient defaults: `staleTime: 30s`, `retry: 1`.
 - **Zustand stores** — Local UI state only:
-  - `board-store.ts` — Drag-and-drop state (`groupedItems`, `isDragging`). Syncs from server data but pauses sync while dragging.
+  - `board-store.ts` — Drag-and-drop state (`groupedItems`, `isDragging`). Syncs from server data but pauses sync while dragging. Uses explicit `resetDragging()` tied to mutation `onSettled`.
   - `panel-store.ts` — Side panel and create dialog open/close state.
   - `view-mode-store.ts` — Kanban/list view toggle, persisted to localStorage (`kanban-view-mode`).
 
@@ -108,14 +125,24 @@ Components use the shadcn/ui pattern: `cn()` utility (`frontend/src/lib/utils.ts
 
 `useTheme()` hook (`frontend/src/hooks/use-theme.ts`) — supports `light`, `dark`, `system` modes, persisted to localStorage (`kanban-theme`).
 
+#### Error Handling
+
+- `ErrorBoundary` component wraps all routes in `main.tsx` — catches render errors with reload button
+- `Suspense` with spinner fallback wraps lazy-loaded route components
+
+#### Shared Utilities
+
+- `frontend/src/hooks/use-click-outside.ts` — Shared click-outside hook (used by 5+ components)
+- `frontend/src/lib/format.ts` — `formatSize()`, `getProjectInitials()`
+- `frontend/src/lib/constants.ts` — `LANGUAGES` constant
+
 #### Frontend Routes
 
 ```
-/                                    → redirects to /projects/default
+/                                    → HomePage (project dashboard)
 /projects/:projectId                 → KanbanPage (board view)
 /projects/:projectId/issues          → IssueDetailPage (list + chat)
 /projects/:projectId/issues/:issueId → IssueDetailPage (specific issue)
-/dashboard                           → HomePage
 ```
 
 ### Dev Workflow
@@ -136,6 +163,8 @@ Components use the shadcn/ui pattern: `cn()` utility (`frontend/src/lib/utils.ts
 - Frontend types mirror backend types in `frontend/src/types/kanban.ts`
 - API client in `frontend/src/lib/kanban-api.ts` — add new endpoints here, then wrap in React Query hooks in `use-kanban.ts`
 - All user-facing strings must have i18n keys in both `en.json` and `zh.json`
+- All API routes must have Zod schemas via `@hono/zod-validator` — no `c.req.json<T>()` with compile-time-only types
+- All route handlers must verify project existence and cross-project ownership before operating on scoped entities
 
 ## Project Task
 
@@ -143,4 +172,5 @@ Use the /ptask skill to manage all tasks.
 - Read `task.md` before starting work; create one if it does not exist.
 - Every change, new feature, or bug fix must have a corresponding entry in `task.md`.
 - Task IDs use `PREFIX-NNN` format (e.g. `AUTH-001`); never skip or reuse IDs.
+- **BEFORE starting any task**: immediately mark it `[-]` in `task.md` and set `owner` to your agent name. This is mandatory for multi-agent coordination.
 - Update status markers in place after completing a task.
