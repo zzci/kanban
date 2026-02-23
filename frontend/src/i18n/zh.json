@@ -151,6 +151,11 @@
   "language": {
     "switchLanguage": "切换语言"
   },
+  "viewMode": {
+    "switchView": "切换视图模式",
+    "kanban": "看板",
+    "list": "列表"
+  },
   "statusName": {
     "To Do": "待办",
     "In Progress": "进行中",

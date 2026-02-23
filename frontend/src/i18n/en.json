@@ -151,6 +151,11 @@
   "language": {
     "switchLanguage": "Switch language"
   },
+  "viewMode": {
+    "switchView": "Switch view mode",
+    "kanban": "Kanban",
+    "list": "List"
+  },
   "statusName": {
     "To Do": "To Do",
     "In Progress": "In Progress",

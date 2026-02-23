@@ -1,10 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { IssueWithTags } from '@/types/kanban'
 import { kanbanApi } from '@/lib/kanban-api'
+import { useBoardStore } from '@/stores/board-store'
+
+export const queryKeys = {
+  projects: () => ['projects'] as const,
+  project: (id: string) => ['projects', id] as const,
+  statuses: (projectId: string) =>
+    ['projects', projectId, 'statuses'] as const,
+  issues: (projectId: string) => ['projects', projectId, 'issues'] as const,
+  issue: (projectId: string, issueId: string) =>
+    ['projects', projectId, 'issues', issueId] as const,
+  tags: (projectId: string) => ['projects', projectId, 'tags'] as const,
+}
 
 export function useProjects() {
   return useQuery({
-    queryKey: ['projects'],
+    queryKey: queryKeys.projects(),
     queryFn: () => kanbanApi.getProjects(),
   })
 }
@@ -19,7 +31,7 @@ export function useCreateProject() {
       repositoryUrl?: string
     }) => kanbanApi.createProject(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() })
     },
   })
 }
@@ -38,44 +50,51 @@ export function useUpdateProject() {
       return kanbanApi.updateProject(id, rest)
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] })
-      queryClient.invalidateQueries({ queryKey: ['project', variables.id] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.project(variables.id),
+      })
     },
   })
 }
 
 export function useProject(projectId: string) {
   return useQuery({
-    queryKey: ['project', projectId],
+    queryKey: queryKeys.project(projectId),
     queryFn: () => kanbanApi.getProject(projectId),
+    enabled: !!projectId,
   })
 }
 
 export function useStatuses(projectId: string) {
   return useQuery({
-    queryKey: ['statuses', projectId],
+    queryKey: queryKeys.statuses(projectId),
     queryFn: () => kanbanApi.getStatuses(projectId),
+    enabled: !!projectId,
   })
 }
 
 export function useIssues(projectId: string) {
   return useQuery({
-    queryKey: ['issues', projectId],
+    queryKey: queryKeys.issues(projectId),
     queryFn: () => kanbanApi.getIssues(projectId),
+    enabled: !!projectId,
   })
 }
 
 export function useIssue(projectId: string, issueId: string) {
   return useQuery({
-    queryKey: ['projects', projectId, 'issues', issueId],
+    queryKey: queryKeys.issue(projectId, issueId),
     queryFn: () => kanbanApi.getIssue(projectId, issueId),
+    enabled: !!projectId && !!issueId,
   })
 }
 
 export function useTags(projectId: string) {
   return useQuery({
-    queryKey: ['tags', projectId],
+    queryKey: queryKeys.tags(projectId),
     queryFn: () => kanbanApi.getTags(projectId),
+    enabled: !!projectId,
   })
 }
 
@@ -89,7 +108,7 @@ export function useCreateIssue(projectId: string) {
       useWorktree?: boolean
     }) => kanbanApi.createIssue(projectId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.issues(projectId) })
     },
   })
 }
@@ -104,11 +123,12 @@ export function useBulkUpdateIssues(projectId: string) {
       }>,
     ) => kanbanApi.bulkUpdateIssues(projectId, updates),
     onMutate: async (updates) => {
-      await queryClient.cancelQueries({ queryKey: ['issues', projectId] })
-      const previous = queryClient.getQueryData<IssueWithTags[]>([
-        'issues',
-        projectId,
-      ])
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.issues(projectId),
+      })
+      const previous = queryClient.getQueryData<IssueWithTags[]>(
+        queryKeys.issues(projectId),
+      )
 
       if (previous) {
         const updated = previous.map((issue) => {
@@ -122,18 +142,19 @@ export function useBulkUpdateIssues(projectId: string) {
           }
           return issue
         })
-        queryClient.setQueryData(['issues', projectId], updated)
+        queryClient.setQueryData(queryKeys.issues(projectId), updated)
       }
 
       return { previous }
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(['issues', projectId], context.previous)
+        queryClient.setQueryData(queryKeys.issues(projectId), context.previous)
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.issues(projectId) })
+      useBoardStore.getState().resetDragging()
     },
   })
 }
@@ -144,7 +165,7 @@ export function useCreateTag(projectId: string) {
     mutationFn: (data: { name: string; color: string }) =>
       kanbanApi.createTag(projectId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags', projectId] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags(projectId) })
     },
   })
 }
@@ -154,7 +175,7 @@ export function useDeleteTag(projectId: string) {
   return useMutation({
     mutationFn: (tagId: string) => kanbanApi.deleteTag(projectId, tagId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags', projectId] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags(projectId) })
     },
   })
 }

@@ -73,7 +73,7 @@ export function KanbanHeader({
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
-              aria-label="Kanban view"
+              aria-label={t('viewMode.kanban')}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
             </button>
@@ -89,7 +89,7 @@ export function KanbanHeader({
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
-              aria-label="List view"
+              aria-label={t('viewMode.list')}
             >
               <List className="h-3.5 w-3.5" />
             </button>

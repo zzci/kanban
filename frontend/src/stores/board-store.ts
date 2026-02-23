@@ -3,8 +3,11 @@ import { move } from '@dnd-kit/helpers'
 import type { DragDropProvider } from '@dnd-kit/react'
 import type { IssueWithTags, Status } from '@/types/kanban'
 
-type DragEvent = Parameters<
+type DragOverEvent = Parameters<
   NonNullable<Parameters<typeof DragDropProvider>[0]['onDragOver']>
+>[0]
+type DragEndEvent = Parameters<
+  NonNullable<Parameters<typeof DragDropProvider>[0]['onDragEnd']>
 >[0]
 
 interface BoardState {
@@ -12,10 +15,11 @@ interface BoardState {
   isDragging: boolean
 
   syncFromServer: (statuses: Status[], issues: IssueWithTags[]) => void
-  applyDragOver: (event: DragEvent) => void
+  applyDragOver: (event: DragOverEvent) => void
   applyDragEnd: (
-    event: DragEvent,
+    event: DragEndEvent,
   ) => Array<{ id: string; changes: { statusId: string; sortOrder: number } }>
+  resetDragging: () => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -56,10 +60,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       }
     }
 
-    setTimeout(() => {
-      useBoardStore.setState({ isDragging: false })
-    }, 500)
-
     return updates
+  },
+
+  resetDragging: () => {
+    set({ isDragging: false })
   },
 }))

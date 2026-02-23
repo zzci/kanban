@@ -19,6 +19,8 @@ import { usePanelStore } from '@/stores/panel-store'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { FilePreviewDialog } from '@/components/FilePreviewDialog'
 import { fileContentHash } from '@/lib/file-hash'
+import { useClickOutside } from '@/hooks/use-click-outside'
+import { formatSize } from '@/lib/format'
 import { PriorityIcon } from './PriorityIcon'
 import { tStatus, tPriority } from '@/lib/i18n-utils'
 
@@ -48,25 +50,6 @@ const AGENTS = [
 type AgentId = (typeof AGENTS)[number]['id']
 
 const PRIORITIES: Priority[] = ['urgent', 'high', 'medium', 'low']
-
-// ── Shared hook ───────────────────────────────────────
-
-function useClickOutside(
-  ref: React.RefObject<HTMLElement | null>,
-  open: boolean,
-  onClose: () => void,
-) {
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClose()
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [ref, open, onClose])
-}
 
 // ── Shared primitives ─────────────────────────────────
 
@@ -123,12 +106,6 @@ function fileIcon(name: string) {
     return <ImageIcon className="h-3.5 w-3.5 text-blue-400 shrink-0" />
   }
   return <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-}
-
-function formatSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 // ── Shared form body ─────────────────────────────────

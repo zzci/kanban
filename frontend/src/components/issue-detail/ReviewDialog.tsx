@@ -1,6 +1,14 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
-import { X, ChevronDown, Container, SlidersHorizontal } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { ChevronDown, Container, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogCloseButton,
+} from '@/components/ui/dialog'
+import { useClickOutside } from '@/hooks/use-click-outside'
 
 const AGENTS = [
   { id: 'claude_code', label: 'CLAUDE_CODE' },
@@ -29,17 +37,7 @@ function SelectDropdown<T extends string>({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+  useClickOutside(ref, open, () => setOpen(false))
 
   const current = items.find((i) => i.id === value) ?? items[0]
 
@@ -77,62 +75,44 @@ function SelectDropdown<T extends string>({
   )
 }
 
-export function ReviewDialog({ onClose }: { onClose: () => void }) {
+export function ReviewDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const { t } = useTranslation()
   const [instructions, setInstructions] = useState('')
   const [includeGit, setIncludeGit] = useState(true)
   const [newSession, setNewSession] = useState(false)
   const [agent, setAgent] = useState<AgentId>('claude_code')
   const [config, setConfig] = useState<ConfigId>('default')
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  const handleOverlayClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.target === overlayRef.current) {
-        onClose()
-      }
-    },
-    [onClose],
-  )
-
-  // Close on Escape
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [onClose])
 
   return (
-    <div
-      ref={overlayRef}
-      onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    >
-      <div className="w-full max-w-[560px] rounded-xl border bg-background shadow-2xl mx-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-[560px] gap-0 p-0 rounded-xl"
+        aria-describedby={undefined}
+      >
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-6 pb-2">
+        <DialogHeader className="px-6 pt-6 pb-2 border-b-0">
           <div>
-            <h2 className="text-lg font-semibold">{t('review.startReview')}</h2>
+            <DialogTitle>{t('review.startReview')}</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {t('review.reviewDescription')}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors -mt-1 -mr-1"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+          <DialogCloseButton />
+        </DialogHeader>
 
         {/* Body */}
         <div className="px-6 py-4 space-y-5">
           {/* Instructions textarea */}
           <div>
-            <label className="text-sm font-medium">{t('review.additionalNotes')}</label>
+            <label className="text-sm font-medium">
+              {t('review.additionalNotes')}
+            </label>
             <textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
@@ -176,7 +156,9 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
               </div>
             </div>
             <div>
-              <span className="text-sm font-medium">{t('review.includeGitContext')}</span>
+              <span className="text-sm font-medium">
+                {t('review.includeGitContext')}
+              </span>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {t('review.includeGitDescription')}
               </p>
@@ -204,7 +186,7 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-6 pb-5 pt-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onOpenChange(false)}
             className="rounded-md border px-4 py-1.5 text-sm font-medium hover:bg-accent transition-colors"
           >
             {t('common.cancel')}
@@ -237,7 +219,7 @@ export function ReviewDialog({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
