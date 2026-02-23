@@ -13,7 +13,7 @@ const issues = new Hono()
 issues.get('/', (c) => {
   const projectId = c.req.param('projectId')
   const allIssues = getIssuesByProject(projectId)
-  const withTags = allIssues.map(issue => ({
+  const withTags = allIssues.map((issue) => ({
     ...issue,
     tags: getTagsForIssue(issue.id),
   }))
@@ -22,7 +22,13 @@ issues.get('/', (c) => {
 
 issues.post('/', async (c) => {
   const projectId = c.req.param('projectId')
-  const body = await c.req.json<{ title?: string, description?: string, priority?: string, statusId?: string }>()
+  const body = await c.req.json<{
+    title?: string
+    description?: string
+    priority?: string
+    statusId?: string
+    useWorktree?: boolean
+  }>()
   if (!body.title || !body.statusId) {
     return c.json({ success: false, error: 'title and statusId are required' }, 400)
   }
@@ -31,12 +37,15 @@ issues.post('/', async (c) => {
     description: body.description,
     priority: (body.priority as 'urgent' | 'high' | 'medium' | 'low') ?? 'medium',
     statusId: body.statusId,
+    useWorktree: body.useWorktree ?? false,
   })
   return c.json({ success: true, data: { ...issue, tags: [] } }, 201)
 })
 
 issues.patch('/bulk', async (c) => {
-  const body = await c.req.json<{ updates?: Array<{ id: string, changes: { statusId?: string, sortOrder?: number } }> }>()
+  const body = await c.req.json<{
+    updates?: Array<{ id: string; changes: { statusId?: string; sortOrder?: number } }>
+  }>()
   if (!body.updates || !Array.isArray(body.updates)) {
     return c.json({ success: false, error: 'updates array is required' }, 400)
   }
@@ -53,7 +62,13 @@ issues.get('/:id', (c) => {
 })
 
 issues.patch('/:id', async (c) => {
-  const body = await c.req.json<{ title?: string, description?: string, priority?: string, statusId?: string, sortOrder?: number }>()
+  const body = await c.req.json<{
+    title?: string
+    description?: string
+    priority?: string
+    statusId?: string
+    sortOrder?: number
+  }>()
   const updated = updateIssue(c.req.param('id'), body as Parameters<typeof updateIssue>[1])
   if (!updated) {
     return c.json({ success: false, error: 'Issue not found' }, 404)

@@ -76,6 +76,7 @@
     "addMore": "Add more",
     "creating": "Creating...",
     "create": "Create Task",
+    "mode": "Mode",
     "permission": "Permission",
     "permissionMode": "Permission mode",
     "perm": {
@@ -101,7 +102,10 @@
       "opus": "Most capable",
       "sonnet": "Best for coding",
       "haiku": "Fastest"
-    }
+    },
+    "worktree": "Worktree",
+    "worktreeOn": "Enabled",
+    "worktreeOff": "Disabled"
   },
   "chat": {
     "send": "Send",

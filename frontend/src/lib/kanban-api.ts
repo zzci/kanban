@@ -70,7 +70,12 @@ export const kanbanApi = {
     get<IssueWithTags[]>(`/api/projects/${projectId}/issues`),
   createIssue: (
     projectId: string,
-    data: { title: string; statusId: string; priority?: string },
+    data: {
+      title: string
+      statusId: string
+      priority?: string
+      useWorktree?: boolean
+    },
   ) => post<IssueWithTags>(`/api/projects/${projectId}/issues`, data),
   updateIssue: (projectId: string, id: string, data: Partial<Issue>) =>
     patch<IssueWithTags>(`/api/projects/${projectId}/issues/${id}`, data),

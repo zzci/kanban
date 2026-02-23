@@ -86,6 +86,7 @@ export function useCreateIssue(projectId: string) {
       title: string
       statusId: string
       priority?: string
+      useWorktree?: boolean
     }) => kanbanApi.createIssue(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues', projectId] })

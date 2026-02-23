@@ -134,3 +134,8 @@
   - description: On mobile, the create project modal is too large and overflows the viewport. Apply the same responsive sizing used in BUG-004 for the project settings modal — add `max-w-[calc(100%-2rem)]` and ensure content is scrollable on small screens.
   - activeForm: Resizing create project modal for mobile
   - createdAt: 2026-02-23 07:00
+
+- [x] **UI-013 Add worktree option when creating issues** `P1`
+  - description: When creating a new issue, add an option (e.g. toggle or checkbox) to specify whether a git worktree should be created for the issue. This lets users choose between working in the main repo or an isolated worktree per issue. Store the worktree preference on the issue and display it in the issue detail view.
+  - activeForm: Adding worktree option to issue creation
+  - createdAt: 2026-02-23 07:30

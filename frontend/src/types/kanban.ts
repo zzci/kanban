@@ -29,6 +29,7 @@ export type Issue = {
   priority: Priority
   sortOrder: number
   parentIssueId: string | null
+  useWorktree: boolean
   createdAt: string
   updatedAt: string
 }

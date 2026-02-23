@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronsRight,
   FileText,
+  GitBranch,
   ImageIcon,
   ListTree,
   MousePointerClick,
@@ -159,6 +160,7 @@ export function CreateIssueForm({
   const [model, setModel] = useState<ModelId>('sonnet')
   const [permission, setPermission] = useState<PermissionId>('auto')
   const [agent, setAgent] = useState<AgentId>('default')
+  const [useWorktree, setUseWorktree] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [previewFile, setPreviewFile] = useState<File | null>(null)
 
@@ -176,7 +178,7 @@ export function CreateIssueForm({
     const trimmed = input.trim()
     if (!trimmed || !statusId) return
     createIssue.mutate(
-      { title: trimmed, statusId, priority },
+      { title: trimmed, statusId, priority, useWorktree },
       {
         onSuccess: () => {
           setInput('')
@@ -184,12 +186,13 @@ export function CreateIssueForm({
           setModel('sonnet')
           setPermission('auto')
           setAgent('default')
+          setUseWorktree(false)
           setFiles([])
           onCreated?.()
         },
       },
     )
-  }, [input, statusId, priority, createIssue, onCreated])
+  }, [input, statusId, priority, useWorktree, createIssue, onCreated])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -294,7 +297,7 @@ export function CreateIssueForm({
         <p className="text-xs font-medium text-muted-foreground mb-2">
           {t('issue.properties')}
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <PropertyRow label={t('issue.status')}>
             <StatusSelect
               statuses={statuses ?? []}
@@ -305,11 +308,17 @@ export function CreateIssueForm({
           <PropertyRow label={t('issue.priority')}>
             <PrioritySelect value={priority} onChange={setPriority} />
           </PropertyRow>
+          <PropertyRow label={t('createIssue.worktree')}>
+            <WorktreeToggle value={useWorktree} onChange={setUseWorktree} />
+          </PropertyRow>
           <PropertyRow label={t('createIssue.model')}>
             <ModelSelect value={model} onChange={setModel} />
           </PropertyRow>
           <PropertyRow label={t('createIssue.agent')}>
             <AgentSelect value={agent} onChange={setAgent} />
+          </PropertyRow>
+          <PropertyRow label={t('createIssue.mode')}>
+            <PermissionSelect value={permission} onChange={setPermission} />
           </PropertyRow>
         </div>
       </div>
@@ -373,10 +382,7 @@ export function CreateIssueForm({
       </div>
 
       {/* ─── Footer ─────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-4">
-        <div className="flex items-center gap-1.5">
-          <PermissionButton value={permission} onChange={setPermission} />
-        </div>
+      <div className="flex items-center justify-end px-5 pt-4 pb-4">
         <div className="flex items-center gap-2">
           {onCancel ? (
             <button
@@ -631,6 +637,31 @@ function AgentSelect({
   )
 }
 
+function WorktreeToggle({
+  value,
+  onChange,
+}: {
+  value: boolean
+  onChange: (v: boolean) => void
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className="flex items-center gap-1.5 text-sm hover:text-foreground transition-colors w-full"
+    >
+      <GitBranch
+        className={`h-3.5 w-3.5 shrink-0 ${value ? 'text-emerald-500' : 'text-muted-foreground'}`}
+      />
+      <span className={value ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+        {value ? t('createIssue.worktreeOn') : t('createIssue.worktreeOff')}
+      </span>
+    </button>
+  )
+}
+
 function ModelSelect({
   value,
   onChange,
@@ -680,9 +711,9 @@ function ModelSelect({
   )
 }
 
-// ── Permission button (footer) ────────────────────────
+// ── Permission select (inline in property row) ───────
 
-function PermissionButton({
+function PermissionSelect({
   value,
   onChange,
 }: {
@@ -701,11 +732,11 @@ function PermissionButton({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-        title={t('createIssue.permissionMode')}
+        className="flex items-center gap-1.5 text-sm hover:text-foreground transition-colors w-full"
       >
-        <Icon className="h-3.5 w-3.5" />
-        <span>{t(`createIssue.perm.${current.id}`)}</span>
+        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <span className="truncate">{t(`createIssue.perm.${current.id}`)}</span>
+        <ChevronDown className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
       </button>
       {open ? (
         <DropdownPanel

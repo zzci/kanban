@@ -70,12 +70,13 @@
   "createIssue": {
     "title": "创建任务",
     "model": "模型",
-    "agent": "Agent",
+    "agent": "代理",
     "attachments": "附件",
     "uploadFiles": "点击上传文件或拖拽到此处",
     "addMore": "继续添加",
     "creating": "创建中...",
     "create": "创建任务",
+    "mode": "模式",
     "permission": "权限",
     "permissionMode": "权限模式",
     "perm": {
@@ -101,7 +102,10 @@
       "opus": "最强大",
       "sonnet": "最适合编码",
       "haiku": "最快"
-    }
+    },
+    "worktree": "工作树",
+    "worktreeOn": "启用",
+    "worktreeOff": "禁用"
   },
   "chat": {
     "send": "发送",
