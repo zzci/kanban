@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { getAgentSessionsByIssue, getExecutionProcessesBySession } from '../agents/agent-store'
 import { processManager } from '../agents/process-manager'
 import { sessionManager } from '../agents/session-manager'
-import { getProject } from '../db/memory-store'
+import { findProject } from '../db/helpers'
 
 const createSessionSchema = z.object({
   agentType: z.enum(['claude-code', 'codex', 'gemini']),
@@ -65,7 +65,7 @@ sessions.post(
     // Resolve workingDir: explicit > project.directory > cwd
     let workingDir = body.workingDir
     if (!workingDir) {
-      const project = getProject(projectId)
+      const project = await findProject(projectId)
       if (project?.directory)
         workingDir = project.directory
     }

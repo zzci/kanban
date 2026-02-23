@@ -24,6 +24,41 @@ export const projects = sqliteTable('projects', {
   ...commonFields,
 })
 
+export const statuses = sqliteTable('statuses', {
+  projectId: text('project_id').notNull(),
+  name: text('name').notNull(),
+  color: text('color').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  ...commonFields,
+})
+
+export const issues = sqliteTable('issues', {
+  projectId: text('project_id').notNull(),
+  statusId: text('status_id').notNull(),
+  issueNumber: integer('issue_number').notNull(),
+  displayId: text('display_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  priority: text('priority').notNull().default('medium'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  parentIssueId: text('parent_issue_id'),
+  useWorktree: integer('use_worktree', { mode: 'boolean' }).notNull().default(false),
+  ...commonFields,
+})
+
+export const tags = sqliteTable('tags', {
+  projectId: text('project_id').notNull(),
+  name: text('name').notNull(),
+  color: text('color').notNull(),
+  ...commonFields,
+})
+
+export const issueTags = sqliteTable('issue_tags', {
+  issueId: text('issue_id').notNull(),
+  tagId: text('tag_id').notNull(),
+  ...commonFields,
+})
+
 export const runtimeEvents = sqliteTable('runtime_events', {
   event: text('event').notNull(),
   ...commonFields,

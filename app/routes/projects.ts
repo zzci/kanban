@@ -1,9 +1,11 @@
 import { zValidator } from '@hono/zod-validator'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { db } from '../db'
-import { projects as projectsTable } from '../db/schema'
+import { findProject } from '../db/helpers'
+import { projects as projectsTable, statuses as statusesTable } from '../db/schema'
+import { DEFAULT_STATUSES } from '../db/seed-data'
 
 const slugRegex = /^[a-z0-9-]+$/
 
@@ -63,21 +65,6 @@ async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
   }
 }
 
-async function findProject(param: string) {
-  // Try by ID first, then by slug
-  let [row] = await db
-    .select()
-    .from(projectsTable)
-    .where(and(eq(projectsTable.id, param), eq(projectsTable.isDeleted, 0)))
-  if (!row) {
-    ;[row] = await db
-      .select()
-      .from(projectsTable)
-      .where(and(eq(projectsTable.slug, param), eq(projectsTable.isDeleted, 0)))
-  }
-  return row
-}
-
 const projects = new Hono()
 
 projects.get('/', async (c) => {
@@ -108,6 +95,17 @@ projects.post(
         repositoryUrl: body.repositoryUrl || null,
       })
       .returning()
+
+    // Auto-create default statuses for new project
+    for (const s of DEFAULT_STATUSES) {
+      await db.insert(statusesTable).values({
+        projectId: row!.id,
+        name: s.name,
+        color: s.color,
+        sortOrder: s.sortOrder,
+      })
+    }
+
     return c.json({ success: true, data: serializeProject(row!) }, 201)
   },
 )

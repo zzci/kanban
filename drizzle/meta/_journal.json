@@ -29,6 +29,13 @@
       "when": 1771871706696,
       "tag": "0003_gifted_rocket_racer",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1771874331801,
+      "tag": "0004_giant_hercules",
+      "breakpoints": true
     }
   ]
 }

@@ -1,14 +1,94 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { ulid } from 'ulid'
 import { db } from '.'
-import { projects } from './schema'
+import { issues, projects, statuses, tags } from './schema'
+import { DEFAULT_STATUSES, ISSUE_SEEDS, SEED_PROJECTS } from './seed-data'
 
 export async function seedDefaultProject() {
-  const existing = await db.select().from(projects).where(eq(projects.id, 'default'))
-  if (existing.length === 0) {
-    await db.insert(projects).values({
-      id: 'default',
-      name: 'My Project',
-      slug: 'default',
-    })
+  for (const proj of SEED_PROJECTS) {
+    // Seed project
+    const existingProject = await db.select().from(projects).where(eq(projects.id, proj.id))
+    if (existingProject.length === 0) {
+      await db.insert(projects).values({
+        id: proj.id,
+        name: proj.name,
+        slug: proj.id,
+      })
+    }
+
+    // Seed statuses
+    const existingStatuses = await db
+      .select()
+      .from(statuses)
+      .where(and(eq(statuses.projectId, proj.id), eq(statuses.isDeleted, 0)))
+    if (existingStatuses.length === 0) {
+      for (const s of DEFAULT_STATUSES) {
+        await db.insert(statuses).values({
+          id: ulid(),
+          projectId: proj.id,
+          name: s.name,
+          color: s.color,
+          sortOrder: s.sortOrder,
+        })
+      }
+    }
+
+    // Seed tags
+    const existingTags = await db
+      .select()
+      .from(tags)
+      .where(and(eq(tags.projectId, proj.id), eq(tags.isDeleted, 0)))
+    if (existingTags.length === 0) {
+      const defaultTags = [
+        { name: 'Bug', color: '#ef4444' },
+        { name: 'Feature', color: '#8b5cf6' },
+        { name: 'Docs', color: '#06b6d4' },
+      ]
+      for (const t of defaultTags) {
+        await db.insert(tags).values({
+          id: ulid(),
+          projectId: proj.id,
+          name: t.name,
+          color: t.color,
+        })
+      }
+    }
+
+    // Seed issues
+    const existingIssues = await db
+      .select()
+      .from(issues)
+      .where(eq(issues.projectId, proj.id))
+    if (existingIssues.length === 0) {
+      const projStatuses = await db
+        .select()
+        .from(statuses)
+        .where(and(eq(statuses.projectId, proj.id), eq(statuses.isDeleted, 0)))
+      const sortedStatuses = projStatuses.sort((a, b) => a.sortOrder - b.sortOrder)
+
+      const projIssues = ISSUE_SEEDS[proj.id] ?? []
+      let issueNumber = 1
+      for (let i = 0; i < projIssues.length; i++) {
+        const item = projIssues[i]!
+        const status = sortedStatuses[item.statusIndex]
+        if (!status)
+          continue
+
+        await db.insert(issues).values({
+          id: ulid(),
+          projectId: proj.id,
+          statusId: status.id,
+          issueNumber,
+          displayId: `ISS-${issueNumber}`,
+          title: item.title,
+          description: item.description,
+          priority: item.priority,
+          sortOrder: i,
+          parentIssueId: null,
+          useWorktree: false,
+        })
+        issueNumber++
+      }
+    }
   }
 }

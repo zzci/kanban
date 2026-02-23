@@ -1,4 +1,4 @@
-import type { Issue } from './memory-store'
+type Priority = 'urgent' | 'high' | 'medium' | 'low'
 
 export const DEFAULT_STATUSES = [
   { name: 'To Do', color: '#6b7280', sortOrder: 0 },
@@ -16,7 +16,7 @@ export const ISSUE_SEEDS: Record<
   Array<{
     title: string
     description: string | null
-    priority: Issue['priority']
+    priority: Priority
     statusIndex: number
   }>
 > = {

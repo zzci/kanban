@@ -264,7 +264,7 @@
   - activeForm: Refactoring ReviewDialog
   - createdAt: 2026-02-23 14:30
 
-- [ ] **ARCH-001 Introduce repository interface for data layer** `P2`
+- [~] **ARCH-001 Introduce repository interface for data layer** `P2`
   - description: Memory store and Drizzle ORM have no shared interface — migration will require rewriting every route handler. Create `app/db/repository.ts` with interfaces (IssueRepository, ProjectRepository, etc.) that both memory-store and future Drizzle implementation satisfy. Route handlers import from repository, not memory-store directly. Also add Drizzle schema for kanban entities (projects, issues, statuses, tags).
   - activeForm: Creating repository abstraction
   - createdAt: 2026-02-23 14:30
@@ -308,4 +308,10 @@
   - description: Add `projects` table to Drizzle schema, generate migration, rewrite `routes/projects.ts` to use Drizzle instead of memory-store, seed default project on startup, update mock middleware to only intercept default project sub-resources (issues/statuses/tags). New projects go directly to DB.
   - activeForm: Migrating projects to SQLite
   - createdAt: 2026-02-23 18:30
+  - owner: main
+
+- [x] **DB-002 Migrate issues, statuses, tags to SQLite/Drizzle** `P1`
+  - description: Add `statuses`, `issues`, `tags`, `issueTags` tables to Drizzle schema. Rewrite all route handlers to use Drizzle queries. Extract shared `findProject` helper. Update seed to populate statuses/issues/tags. Auto-create default statuses on project creation. Remove mock middleware and memory-store. All data now persists across restarts.
+  - activeForm: Migrating data layer to SQLite
+  - createdAt: 2026-02-23 19:20
   - owner: main
