@@ -14,7 +14,7 @@ export function DiffPanel({
 }) {
   return (
     <div
-      className="relative h-full shrink-0 border-l border-border bg-white"
+      className="relative h-full shrink-0 border-l border-border bg-background"
       style={{ width }}
     >
       {/* Resize handle — absolutely positioned, no layout space */}

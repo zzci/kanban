@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { checkDbHealth } from '../db'
+import filesystem from './filesystem'
 import issues from './issues'
 import projects from './projects'
 import statuses from './statuses'
@@ -8,6 +9,7 @@ import tags, { issueTagRoutes } from './tags'
 const apiRoutes = new Hono()
 
 // Kanban routes
+apiRoutes.route('/filesystem', filesystem)
 apiRoutes.route('/projects', projects)
 apiRoutes.route('/projects/:projectId/statuses', statuses)
 apiRoutes.route('/projects/:projectId/issues', issues)

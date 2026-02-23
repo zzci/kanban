@@ -59,7 +59,7 @@ export function ChatArea({
   }
 
   return (
-    <div className="flex flex-1 min-w-0 bg-white">
+    <div className="flex flex-1 min-w-0 bg-background">
       {/* Chat column */}
       <div className="flex flex-1 min-w-0 flex-col">
         {/* Title bar */}

@@ -1,34 +1,23 @@
 import { useNavigate } from 'react-router-dom'
-import { FolderKanban, Plus, Hash, Layers } from 'lucide-react'
+import {
+  FolderKanban,
+  Plus,
+  Hash,
+  Layers,
+  Moon,
+  Sun,
+  MoreVertical,
+} from 'lucide-react'
 import { useProjects } from '@/hooks/use-kanban'
 import { useProjectStats } from '@/hooks/use-project-stats'
 import type { Project } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreateProjectDialog } from '@/components/CreateProjectDialog'
+import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
 import { useState, useCallback } from 'react'
-
-const PROJECT_COLORS = [
-  'bg-blue-600',
-  'bg-violet-600',
-  'bg-emerald-600',
-  'bg-amber-600',
-  'bg-rose-600',
-  'bg-cyan-600',
-  'bg-pink-600',
-  'bg-teal-600',
-]
-
-function getProjectColor(index: number): string {
-  return PROJECT_COLORS[index % PROJECT_COLORS.length] ?? PROJECT_COLORS[0]
-}
+import { useTheme } from '@/hooks/use-theme'
 
 function getProjectInitials(name: string): string {
   const trimmed = name.trim()
@@ -42,52 +31,63 @@ function getProjectInitials(name: string): string {
 
 function ProjectCard({
   project,
-  colorClass,
   onClick,
 }: {
   project: Project
-  colorClass: string
   onClick: () => void
 }) {
   const stats = useProjectStats(project.id)
+  const [showSettings, setShowSettings] = useState(false)
 
   return (
-    <Card
-      className="bg-card/70 hover:bg-card cursor-pointer transition-all hover:shadow-md hover:border-primary/20 group"
-      onClick={onClick}
-    >
-      <CardHeader>
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white ${colorClass}`}
-          >
-            {getProjectInitials(project.name)}
+    <>
+      <Card
+        className="bg-card/70 hover:bg-card cursor-pointer transition-all hover:shadow-md hover:border-primary/20 group"
+        onClick={onClick}
+      >
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold bg-muted text-muted-foreground">
+              {getProjectInitials(project.name)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base group-hover:text-primary transition-colors truncate">
+                {project.name}
+              </CardTitle>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowSettings(true)
+              }}
+              className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.07] transition-colors"
+              aria-label="Project settings"
+              title="Project settings"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
           </div>
-          <div className="min-w-0 flex-1">
-            <CardTitle className="text-base group-hover:text-primary transition-colors truncate">
-              {project.name}
-            </CardTitle>
-            <CardDescription className="mt-1">
-              <Badge variant="secondary" className="text-[10px] font-mono">
-                {project.prefix}
-              </Badge>
-            </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Hash className="h-3 w-3" />
+              {stats.issueCount} issues
+            </span>
+            <span className="flex items-center gap-1">
+              <Layers className="h-3 w-3" />
+              {stats.statusCount} statuses
+            </span>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Hash className="h-3 w-3" />
-            {stats.issueCount} issues
-          </span>
-          <span className="flex items-center gap-1">
-            <Layers className="h-3 w-3" />
-            {stats.statusCount} statuses
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      <ProjectSettingsDialog
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        project={project}
+      />
+    </>
   )
 }
 
@@ -95,6 +95,7 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { data: projects, isLoading } = useProjects()
   const [showCreate, setShowCreate] = useState(false)
+  const { resolved, toggle } = useTheme()
 
   const handleProjectCreated = useCallback(
     (project: Project) => {
@@ -116,15 +117,33 @@ export default function HomePage() {
               {projects.length}
             </Badge>
           ) : null}
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-auto"
-            onClick={() => setShowCreate(true)}
-          >
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={toggle}
+              aria-label={
+                resolved === 'dark'
+                  ? 'Switch to light mode'
+                  : 'Switch to dark mode'
+              }
+            >
+              {resolved === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreate(true)}
+            >
+              <Plus className="h-4 w-4" />
+              New Project
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -148,11 +167,10 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects?.map((project, index) => (
+            {projects?.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
-                colorClass={getProjectColor(index)}
                 onClick={() => navigate(`/projects/${project.id}`)}
               />
             ))}

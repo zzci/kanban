@@ -12,10 +12,34 @@ export function useProjects() {
 export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { name: string; prefix: string }) =>
-      kanbanApi.createProject(data),
+    mutationFn: (data: {
+      name: string
+      description?: string
+      directory?: string
+      repositoryUrl?: string
+    }) => kanbanApi.createProject(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+export function useUpdateProject() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: {
+      id: string
+      name?: string
+      description?: string
+      directory?: string
+      repositoryUrl?: string
+    }) => {
+      const { id, ...rest } = data
+      return kanbanApi.updateProject(id, rest)
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['project', variables.id] })
     },
   })
 }
@@ -109,6 +133,27 @@ export function useBulkUpdateIssues(projectId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+    },
+  })
+}
+
+export function useCreateTag(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { name: string; color: string }) =>
+      kanbanApi.createTag(projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags', projectId] })
+    },
+  })
+}
+
+export function useDeleteTag(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (tagId: string) => kanbanApi.deleteTag(projectId, tagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags', projectId] })
     },
   })
 }

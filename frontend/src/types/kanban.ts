@@ -3,7 +3,9 @@ export type Priority = 'urgent' | 'high' | 'medium' | 'low'
 export type Project = {
   id: string
   name: string
-  prefix: string
+  description?: string
+  directory?: string
+  repositoryUrl?: string
   createdAt: string
   updatedAt: string
 }

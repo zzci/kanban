@@ -31,12 +31,35 @@ function patch<T>(url: string, body: unknown) {
   return request<T>(url, { method: 'PATCH', body: JSON.stringify(body) })
 }
 
+function del<T>(url: string) {
+  return request<T>(url, { method: 'DELETE' })
+}
+
 export const kanbanApi = {
+  // Filesystem
+  listDirs: (path?: string) =>
+    get<{ current: string; parent: string | null; dirs: string[] }>(
+      `/api/filesystem/dirs${path ? `?path=${encodeURIComponent(path)}` : ''}`,
+    ),
+
   // Projects
   getProjects: () => get<Project[]>('/api/projects'),
   getProject: (id: string) => get<Project>(`/api/projects/${id}`),
-  createProject: (data: { name: string; prefix: string }) =>
-    post<Project>('/api/projects', data),
+  createProject: (data: {
+    name: string
+    description?: string
+    directory?: string
+    repositoryUrl?: string
+  }) => post<Project>('/api/projects', data),
+  updateProject: (
+    id: string,
+    data: {
+      name?: string
+      description?: string
+      directory?: string
+      repositoryUrl?: string
+    },
+  ) => patch<Project>(`/api/projects/${id}`, data),
 
   // Statuses
   getStatuses: (projectId: string) =>
@@ -64,4 +87,8 @@ export const kanbanApi = {
 
   // Tags
   getTags: (projectId: string) => get<Tag[]>(`/api/projects/${projectId}/tags`),
+  createTag: (projectId: string, data: { name: string; color: string }) =>
+    post<Tag>(`/api/projects/${projectId}/tags`, data),
+  deleteTag: (projectId: string, tagId: string) =>
+    del<null>(`/api/projects/${projectId}/tags/${tagId}`),
 }

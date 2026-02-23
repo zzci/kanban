@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FolderOpen } from 'lucide-react'
-import { useCreateProject } from '@/hooks/use-kanban'
 import type { Project } from '@/types/kanban'
+import { useUpdateProject } from '@/hooks/use-kanban'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,46 +13,51 @@ import {
 } from '@/components/ui/dialog'
 import { DirectoryPicker } from '@/components/DirectoryPicker'
 
-export function CreateProjectDialog({
+export function ProjectSettingsDialog({
   open,
   onOpenChange,
-  onCreated,
+  project,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated: (p: Project) => void
+  project: Project
 }) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [directory, setDirectory] = useState('')
-  const [repositoryUrl, setRepositoryUrl] = useState('')
+  const [name, setName] = useState(project.name)
+  const [description, setDescription] = useState(project.description ?? '')
+  const [directory, setDirectory] = useState(project.directory ?? '')
+  const [repositoryUrl, setRepositoryUrl] = useState(
+    project.repositoryUrl ?? '',
+  )
   const [dirPickerOpen, setDirPickerOpen] = useState(false)
-  const createProject = useCreateProject()
+  const updateProject = useUpdateProject()
 
-  const reset = () => {
-    setName('')
-    setDescription('')
-    setDirectory('')
-    setRepositoryUrl('')
-  }
+  useEffect(() => {
+    if (open) {
+      setName(project.name)
+      setDescription(project.description ?? '')
+      setDirectory(project.directory ?? '')
+      setRepositoryUrl(project.repositoryUrl ?? '')
+    }
+  }, [open, project])
 
-  const handleSubmit = () => {
+  const hasChanges =
+    name.trim() !== project.name ||
+    description.trim() !== (project.description ?? '') ||
+    directory.trim() !== (project.directory ?? '') ||
+    repositoryUrl.trim() !== (project.repositoryUrl ?? '')
+
+  const handleSave = () => {
     const trimmedName = name.trim()
     if (!trimmedName) return
-    createProject.mutate(
+    updateProject.mutate(
       {
+        id: project.id,
         name: trimmedName,
         description: description.trim() || undefined,
         directory: directory.trim() || undefined,
         repositoryUrl: repositoryUrl.trim() || undefined,
       },
-      {
-        onSuccess: (project) => {
-          onCreated(project)
-          onOpenChange(false)
-          reset()
-        },
-      },
+      { onSuccess: () => onOpenChange(false) },
     )
   }
 
@@ -60,23 +65,18 @@ export function CreateProjectDialog({
     'w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v)
-        if (!v) reset()
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <div>
-            <DialogTitle>Create Project</DialogTitle>
+            <DialogTitle>Project Settings</DialogTitle>
             <DialogDescription className="mt-1">
-              Create a new project to organize your issues
+              Update project details
             </DialogDescription>
           </div>
           <DialogCloseButton />
         </DialogHeader>
+
         <div className="space-y-4 px-5 pb-5 pt-3">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
@@ -150,10 +150,10 @@ export function CreateProjectDialog({
           <Button
             className="w-full"
             variant="outline"
-            onClick={handleSubmit}
-            disabled={createProject.isPending || !name.trim()}
+            onClick={handleSave}
+            disabled={updateProject.isPending || !name.trim() || !hasChanges}
           >
-            {createProject.isPending ? 'Creating...' : 'Create Project'}
+            {updateProject.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </DialogContent>

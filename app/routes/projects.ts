@@ -8,11 +8,21 @@ projects.get('/', (c) => {
 })
 
 projects.post('/', async (c) => {
-  const body = await c.req.json<{ name?: string, prefix?: string }>()
-  if (!body.name || !body.prefix) {
-    return c.json({ success: false, error: 'name and prefix are required' }, 400)
+  const body = await c.req.json<{
+    name?: string
+    description?: string
+    directory?: string
+    repositoryUrl?: string
+  }>()
+  if (!body.name) {
+    return c.json({ success: false, error: 'name is required' }, 400)
   }
-  const project = createProject({ name: body.name, prefix: body.prefix })
+  const project = createProject({
+    name: body.name,
+    description: body.description,
+    directory: body.directory,
+    repositoryUrl: body.repositoryUrl,
+  })
   return c.json({ success: true, data: project }, 201)
 })
 
@@ -25,7 +35,12 @@ projects.get('/:projectId', (c) => {
 })
 
 projects.patch('/:projectId', async (c) => {
-  const body = await c.req.json<{ name?: string, prefix?: string }>()
+  const body = await c.req.json<{
+    name?: string
+    description?: string
+    directory?: string
+    repositoryUrl?: string
+  }>()
   const updated = updateProject(c.req.param('projectId'), body)
   if (!updated) {
     return c.json({ success: false, error: 'Project not found' }, 404)

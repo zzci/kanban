@@ -1,5 +1,11 @@
 import { Hono } from 'hono'
-import { addTagToIssue, createTag, getTagsByProject, removeTagFromIssue } from '../db/memory-store'
+import {
+  addTagToIssue,
+  createTag,
+  deleteTag,
+  getTagsByProject,
+  removeTagFromIssue,
+} from '../db/memory-store'
 
 const tags = new Hono()
 
@@ -16,6 +22,16 @@ tags.post('/', async (c) => {
   }
   const tag = createTag(projectId, { name: body.name, color: body.color })
   return c.json({ success: true, data: tag }, 201)
+})
+
+tags.delete('/:tagId', (c) => {
+  const projectId = c.req.param('projectId')
+  const tagId = c.req.param('tagId')
+  const removed = deleteTag(projectId, tagId)
+  if (!removed) {
+    return c.json({ success: false, error: 'Tag not found' }, 404)
+  }
+  return c.json({ success: true, data: null })
 })
 
 // Issue-tag associations are nested under issues

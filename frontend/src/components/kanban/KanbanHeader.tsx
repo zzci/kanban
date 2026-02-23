@@ -1,8 +1,10 @@
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, Search, Settings, SlidersHorizontal } from 'lucide-react'
 import type { Project } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { usePanelStore } from '@/stores/panel-store'
+import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
 
 export function KanbanHeader({
   project,
@@ -14,6 +16,7 @@ export function KanbanHeader({
   defaultStatusId?: string
 }) {
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
+  const [showSettings, setShowSettings] = useState(false)
 
   return (
     <div className="shrink-0 border-b border-border bg-card">
@@ -23,6 +26,15 @@ export function KanbanHeader({
           <h1 className="text-base font-semibold text-foreground">
             {project.name}
           </h1>
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.07] transition-colors"
+            aria-label="Project settings"
+            title="Project settings"
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </button>
           <span className="text-xs text-muted-foreground tabular-nums">
             {issueCount} issues
           </span>
@@ -62,6 +74,11 @@ export function KanbanHeader({
           </Button>
         </div>
       </div>
+      <ProjectSettingsDialog
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        project={project}
+      />
     </div>
   )
 }

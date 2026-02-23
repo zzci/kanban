@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Settings, Plus } from 'lucide-react'
-import { useIssues, useStatuses } from '@/hooks/use-kanban'
+import { useIssues, useStatuses, useProject } from '@/hooks/use-kanban'
 import type { IssueWithTags, Status } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import { usePanelStore } from '@/stores/panel-store'
+import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
 
 export function IssueListPanel({
   projectId,
@@ -18,8 +19,10 @@ export function IssueListPanel({
   const navigate = useNavigate()
   const { data: issues } = useIssues(projectId)
   const { data: statuses } = useStatuses(projectId)
+  const { data: project } = useProject(projectId)
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
   const [search, setSearch] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
   const filtered = useMemo(
@@ -52,7 +55,7 @@ export function IssueListPanel({
   }
 
   return (
-    <div className="flex flex-col h-full w-[280px] border-r border-border bg-background shrink-0">
+    <div className="flex flex-col h-full w-[280px] border-r border-border bg-secondary shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between px-3.5 py-2.5 border-b min-h-[45px]">
         <span className="text-sm font-semibold truncate">{projectName}</span>
@@ -61,7 +64,7 @@ export function IssueListPanel({
             variant="ghost"
             size="icon"
             className="h-7 w-7 text-muted-foreground"
-            disabled
+            onClick={() => setShowSettings(true)}
           >
             <Settings className="h-3.5 w-3.5" />
           </Button>
@@ -89,6 +92,14 @@ export function IssueListPanel({
           />
         </div>
       </div>
+
+      {project ? (
+        <ProjectSettingsDialog
+          open={showSettings}
+          onOpenChange={setShowSettings}
+          project={project}
+        />
+      ) : null}
 
       {/* Grouped issue list */}
       <div className="flex-1 overflow-y-auto">
