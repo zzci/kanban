@@ -35,15 +35,6 @@ export type Issue = {
   updatedAt: string
 }
 
-export type Tag = {
-  id: string
-  projectId: string
-  name: string
-  color: string
-}
-
-export type IssueWithTags = Issue & { tags: Tag[] }
-
 export type ApiResponse<T> =
   | { success: true; data: T }
   | { success: false; error: string }

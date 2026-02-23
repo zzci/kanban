@@ -1,15 +1,10 @@
 import { zValidator } from '@hono/zod-validator'
-import { and, eq, inArray, max } from 'drizzle-orm'
+import { and, eq, max } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { db } from '../db'
 import { findProject } from '../db/helpers'
-import {
-  issues as issuesTable,
-  issueTags as issueTagsTable,
-  statuses as statusesTable,
-  tags as tagsTable,
-} from '../db/schema'
+import { issues as issuesTable, statuses as statusesTable } from '../db/schema'
 
 const priorityEnum = z.enum(['urgent', 'high', 'medium', 'low'])
 
@@ -43,7 +38,6 @@ const updateIssueSchema = z.object({
 })
 
 type IssueRow = typeof issuesTable.$inferSelect
-type TagRow = typeof tagsTable.$inferSelect
 
 function serializeIssue(row: IssueRow) {
   return {
@@ -63,50 +57,6 @@ function serializeIssue(row: IssueRow) {
   }
 }
 
-function serializeTag(row: TagRow) {
-  return {
-    id: row.id,
-    projectId: row.projectId,
-    name: row.name,
-    color: row.color,
-  }
-}
-
-async function getTagsForIssues(issueIds: string[]) {
-  if (issueIds.length === 0)
-    return new Map<string, ReturnType<typeof serializeTag>[]>()
-
-  // Get all issue-tag links for these issues
-  const links = await db
-    .select()
-    .from(issueTagsTable)
-    .where(and(inArray(issueTagsTable.issueId, issueIds), eq(issueTagsTable.isDeleted, 0)))
-
-  if (links.length === 0)
-    return new Map<string, ReturnType<typeof serializeTag>[]>()
-
-  // Get all referenced tags
-  const tagIds = [...new Set(links.map(l => l.tagId))]
-  const tagRows = await db
-    .select()
-    .from(tagsTable)
-    .where(and(inArray(tagsTable.id, tagIds), eq(tagsTable.isDeleted, 0)))
-
-  const tagMap = new Map(tagRows.map(t => [t.id, serializeTag(t)]))
-
-  // Build issue -> tags map
-  const result = new Map<string, ReturnType<typeof serializeTag>[]>()
-  for (const link of links) {
-    const tag = tagMap.get(link.tagId)
-    if (!tag)
-      continue
-    const arr = result.get(link.issueId) ?? []
-    arr.push(tag)
-    result.set(link.issueId, arr)
-  }
-  return result
-}
-
 const issues = new Hono()
 
 issues.get('/', async (c) => {
@@ -121,15 +71,7 @@ issues.get('/', async (c) => {
     .from(issuesTable)
     .where(and(eq(issuesTable.projectId, project.id), eq(issuesTable.isDeleted, 0)))
 
-  const issueIds = rows.map(r => r.id)
-  const tagsMap = await getTagsForIssues(issueIds)
-
-  const data = rows.map(row => ({
-    ...serializeIssue(row),
-    tags: tagsMap.get(row.id) ?? [],
-  }))
-
-  return c.json({ success: true, data })
+  return c.json({ success: true, data: rows.map(serializeIssue) })
 })
 
 issues.post(
@@ -206,7 +148,7 @@ issues.post(
         })
         .returning()
 
-      return c.json({ success: true, data: { ...serializeIssue(row!), tags: [] } }, 201)
+      return c.json({ success: true, data: serializeIssue(row!) }, 201)
     }
     catch (error) {
       return c.json(
@@ -301,11 +243,7 @@ issues.get('/:id', async (c) => {
     return c.json({ success: false, error: 'Issue not found' }, 404)
   }
 
-  const tagsMap = await getTagsForIssues([issue.id])
-  return c.json({
-    success: true,
-    data: { ...serializeIssue(issue), tags: tagsMap.get(issue.id) ?? [] },
-  })
+  return c.json({ success: true, data: serializeIssue(issue) })
 })
 
 issues.patch(
@@ -356,11 +294,7 @@ issues.patch(
       updates.parentIssueId = body.parentIssueId
 
     if (Object.keys(updates).length === 0) {
-      const tagsMap = await getTagsForIssues([existing.id])
-      return c.json({
-        success: true,
-        data: { ...serializeIssue(existing), tags: tagsMap.get(existing.id) ?? [] },
-      })
+      return c.json({ success: true, data: serializeIssue(existing) })
     }
 
     const [row] = await db
@@ -372,11 +306,7 @@ issues.patch(
       return c.json({ success: false, error: 'Issue not found' }, 404)
     }
 
-    const tagsMap = await getTagsForIssues([row.id])
-    return c.json({
-      success: true,
-      data: { ...serializeIssue(row), tags: tagsMap.get(row.id) ?? [] },
-    })
+    return c.json({ success: true, data: serializeIssue(row) })
   },
 )
 

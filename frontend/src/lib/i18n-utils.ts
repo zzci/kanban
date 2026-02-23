@@ -5,11 +5,6 @@ export function tStatus(t: TFunction, name: string): string {
   return t(`statusName.${name}`, { defaultValue: name })
 }
 
-/** Translate a tag name from the API, falling back to the original if no translation exists. */
-export function tTag(t: TFunction, name: string): string {
-  return t(`tagName.${name}`, { defaultValue: name })
-}
-
 /** Translate a priority value (urgent/high/medium/low). */
 export function tPriority(t: TFunction, priority: string): string {
   return t(`priorityName.${priority}`, { defaultValue: priority })

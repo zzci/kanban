@@ -44,7 +44,6 @@
   "issue": {
     "status": "Status",
     "priority": "Priority",
-    "tags": "Tags",
     "noDescription": "No description",
     "description": "Description",
     "created": "Created",
@@ -188,11 +187,6 @@
     "In Progress": "In Progress",
     "In Review": "In Review",
     "Done": "Done"
-  },
-  "tagName": {
-    "Bug": "Bug",
-    "Feature": "Feature",
-    "Docs": "Docs"
   },
   "priorityName": {
     "urgent": "Urgent",

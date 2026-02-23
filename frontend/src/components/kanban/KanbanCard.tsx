@@ -1,22 +1,19 @@
 import { useSortable } from '@dnd-kit/react/sortable'
-import type { Issue, Tag } from '@/types/kanban'
-import { Badge } from '@/components/ui/badge'
+import type { Issue } from '@/types/kanban'
 import { PriorityIcon } from './PriorityIcon'
 
 export function KanbanCard({
   issue,
-  tags,
   index,
   columnStatusId,
   isSelected,
   onCardClick,
 }: {
-  issue: Issue & { tags?: Tag[] }
-  tags: Tag[]
+  issue: Issue
   index: number
   columnStatusId: string
   isSelected?: boolean
-  onCardClick?: (issue: Issue & { tags?: Tag[] }) => void
+  onCardClick?: (issue: Issue) => void
 }) {
   const { ref, isDragging } = useSortable({
     id: issue.id,
@@ -59,22 +56,6 @@ export function KanbanCard({
         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
           {issue.description}
         </p>
-      ) : null}
-
-      {/* Tags */}
-      {tags.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {tags.map((tag) => (
-            <Badge
-              key={tag.id}
-              variant="outline"
-              className="text-[10px] px-1.5 py-0 font-normal"
-              style={{ borderColor: tag.color, color: tag.color }}
-            >
-              {tag.name}
-            </Badge>
-          ))}
-        </div>
       ) : null}
     </div>
   )

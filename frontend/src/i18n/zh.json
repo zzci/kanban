@@ -44,7 +44,6 @@
   "issue": {
     "status": "状态",
     "priority": "优先级",
-    "tags": "标签",
     "noDescription": "暂无描述",
     "description": "描述",
     "created": "创建时间",
@@ -188,11 +187,6 @@
     "In Progress": "进行中",
     "In Review": "审查中",
     "Done": "已完成"
-  },
-  "tagName": {
-    "Bug": "缺陷",
-    "Feature": "功能",
-    "Docs": "文档"
   },
   "priorityName": {
     "urgent": "紧急",

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { move } from '@dnd-kit/helpers'
 import type { DragDropProvider } from '@dnd-kit/react'
-import type { IssueWithTags, Status } from '@/types/kanban'
+import type { Issue, Status } from '@/types/kanban'
 
 type DragOverEvent = Parameters<
   NonNullable<Parameters<typeof DragDropProvider>[0]['onDragOver']>
@@ -11,10 +11,10 @@ type DragEndEvent = Parameters<
 >[0]
 
 interface BoardState {
-  groupedItems: Record<string, IssueWithTags[]>
+  groupedItems: Record<string, Issue[]>
   isDragging: boolean
 
-  syncFromServer: (statuses: Status[], issues: IssueWithTags[]) => void
+  syncFromServer: (statuses: Status[], issues: Issue[]) => void
   applyDragOver: (event: DragOverEvent) => void
   applyDragEnd: (
     event: DragEndEvent,
@@ -28,7 +28,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   syncFromServer: (statuses, issues) => {
     if (get().isDragging) return
-    const groups: Record<string, IssueWithTags[]> = {}
+    const groups: Record<string, Issue[]> = {}
     for (const status of statuses) {
       groups[status.id] = issues
         .filter((i) => i.statusId === status.id)

@@ -1,9 +1,7 @@
 import { create } from 'zustand'
-import type { Issue, Tag } from '@/types/kanban'
+import type { Issue } from '@/types/kanban'
 
-type PanelState =
-  | { kind: 'closed' }
-  | { kind: 'view'; issue: Issue & { tags?: Tag[] } }
+type PanelState = { kind: 'closed' } | { kind: 'view'; issue: Issue }
 
 const MIN_WIDTH = 360
 const DEFAULT_WIDTH_RATIO = 0.4
@@ -29,7 +27,7 @@ interface PanelStore {
   createDialogOpen: boolean
   createDialogStatusId: string | undefined
 
-  openView: (issue: Issue & { tags?: Tag[] }) => void
+  openView: (issue: Issue) => void
   close: () => void
   setWidth: (w: number) => void
   openCreateDialog: (statusId?: string) => void

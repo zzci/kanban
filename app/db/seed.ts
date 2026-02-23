@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import { ulid } from 'ulid'
 import { db } from '.'
-import { issues, projects, statuses, tags } from './schema'
+import { issues, projects, statuses } from './schema'
 import { DEFAULT_STATUSES, ISSUE_SEEDS, SEED_PROJECTS } from './seed-data'
 
 export async function seedDefaultProject() {
@@ -33,32 +33,8 @@ export async function seedDefaultProject() {
       }
     }
 
-    // Seed tags
-    const existingTags = await db
-      .select()
-      .from(tags)
-      .where(and(eq(tags.projectId, proj.id), eq(tags.isDeleted, 0)))
-    if (existingTags.length === 0) {
-      const defaultTags = [
-        { name: 'Bug', color: '#ef4444' },
-        { name: 'Feature', color: '#8b5cf6' },
-        { name: 'Docs', color: '#06b6d4' },
-      ]
-      for (const t of defaultTags) {
-        await db.insert(tags).values({
-          id: ulid(),
-          projectId: proj.id,
-          name: t.name,
-          color: t.color,
-        })
-      }
-    }
-
     // Seed issues
-    const existingIssues = await db
-      .select()
-      .from(issues)
-      .where(eq(issues.projectId, proj.id))
+    const existingIssues = await db.select().from(issues).where(eq(issues.projectId, proj.id))
     if (existingIssues.length === 0) {
       const projStatuses = await db
         .select()

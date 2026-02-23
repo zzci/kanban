@@ -46,19 +46,6 @@ export const issues = sqliteTable('issues', {
   ...commonFields,
 })
 
-export const tags = sqliteTable('tags', {
-  projectId: text('project_id').notNull(),
-  name: text('name').notNull(),
-  color: text('color').notNull(),
-  ...commonFields,
-})
-
-export const issueTags = sqliteTable('issue_tags', {
-  issueId: text('issue_id').notNull(),
-  tagId: text('tag_id').notNull(),
-  ...commonFields,
-})
-
 export const runtimeEvents = sqliteTable('runtime_events', {
   event: text('event').notNull(),
   ...commonFields,

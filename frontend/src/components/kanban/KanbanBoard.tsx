@@ -2,7 +2,7 @@ import { DragDropProvider } from '@dnd-kit/react'
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBulkUpdateIssues, useIssues, useStatuses } from '@/hooks/use-kanban'
-import type { Issue, IssueWithTags, Tag } from '@/types/kanban'
+import type { Issue } from '@/types/kanban'
 import { useBoardStore } from '@/stores/board-store'
 import { usePanelStore } from '@/stores/panel-store'
 import { KanbanColumn } from './KanbanColumn'
@@ -12,7 +12,7 @@ export function KanbanBoard({
   onCardClick,
 }: {
   projectId: string
-  onCardClick?: (issue: Issue & { tags?: Tag[] }) => void
+  onCardClick?: (issue: Issue) => void
 }) {
   const { t } = useTranslation()
   const { data: statuses, isLoading: statusesLoading } = useStatuses(projectId)
@@ -23,23 +23,14 @@ export function KanbanBoard({
     useBoardStore()
   const selectedIssueId = usePanelStore((s) => s.selectedIssueId)
 
-  // Map issues to IssueWithTags (tags default to [] if not embedded by API)
-  const issuesWithTags = useMemo<IssueWithTags[] | undefined>(() => {
-    if (!issues) return undefined
-    return issues.map((issue) => ({
-      ...issue,
-      tags: (issue as Partial<IssueWithTags>).tags ?? [],
-    }))
-  }, [issues])
-
   useEffect(() => {
-    if (!statuses || !issuesWithTags) return
-    syncFromServer(statuses, issuesWithTags)
-  }, [statuses, issuesWithTags, syncFromServer])
+    if (!statuses || !issues) return
+    syncFromServer(statuses, issues)
+  }, [statuses, issues, syncFromServer])
 
   const issuesByStatus = useMemo(() => {
-    if (!statuses) return new Map<string, IssueWithTags[]>()
-    const map = new Map<string, IssueWithTags[]>()
+    if (!statuses) return new Map<string, Issue[]>()
+    const map = new Map<string, Issue[]>()
     for (const status of statuses) {
       map.set(status.id, groupedItems[status.id] ?? [])
     }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Settings, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useIssues, useStatuses, useProject } from '@/hooks/use-kanban'
-import type { IssueWithTags, Status } from '@/types/kanban'
+import type { Issue, Status } from '@/types/kanban'
 import { Button } from '@/components/ui/button'
 import { usePanelStore } from '@/stores/panel-store'
 import { ProjectSettingsDialog } from '@/components/ProjectSettingsDialog'
@@ -40,7 +40,7 @@ export function IssueListPanel({
 
   const grouped = useMemo(() => {
     if (!statuses || !filtered) return []
-    const map = new Map<string, IssueWithTags[]>()
+    const map = new Map<string, Issue[]>()
     for (const issue of filtered) {
       const list = map.get(issue.statusId) ?? []
       list.push(issue)
@@ -138,7 +138,7 @@ function StatusGroup({
   onNavigate,
 }: {
   status: Status
-  issues: IssueWithTags[]
+  issues: Issue[]
   isCollapsed: boolean
   onToggle: () => void
   activeIssueId: string

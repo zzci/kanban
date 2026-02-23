@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/react'
 import { CollisionPriority } from '@dnd-kit/abstract'
 import { Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { Issue, Status, Tag } from '@/types/kanban'
+import type { Issue, Status } from '@/types/kanban'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -17,9 +17,9 @@ export function KanbanColumn({
   onCardClick,
 }: {
   status: Status
-  issues: (Issue & { tags?: Tag[] })[]
+  issues: Issue[]
   selectedIssueId?: string | null
-  onCardClick?: (issue: Issue & { tags?: Tag[] }) => void
+  onCardClick?: (issue: Issue) => void
 }) {
   const { t } = useTranslation()
   const openCreateDialog = usePanelStore((s) => s.openCreateDialog)
@@ -30,11 +30,6 @@ export function KanbanColumn({
   })
 
   const sorted = [...issues].sort((a, b) => a.sortOrder - b.sortOrder)
-
-  const issueTagMap = new Map<string, Tag[]>()
-  for (const issue of sorted) {
-    issueTagMap.set(issue.id, issue.tags ?? [])
-  }
 
   return (
     <div
@@ -81,7 +76,6 @@ export function KanbanColumn({
           <KanbanCard
             key={issue.id}
             issue={issue}
-            tags={issueTagMap.get(issue.id) ?? []}
             index={index}
             columnStatusId={status.id}
             isSelected={selectedIssueId === issue.id}

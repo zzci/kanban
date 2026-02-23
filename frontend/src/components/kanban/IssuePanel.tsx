@@ -2,16 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Maximize2, Link, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { Issue, Status, Tag } from '@/types/kanban'
+import type { Issue, Status } from '@/types/kanban'
 import { Badge } from '@/components/ui/badge'
 import { PriorityIcon } from './PriorityIcon'
 import { ChatInput } from '@/components/issue-detail/ChatInput'
-import { tStatus, tTag, tPriority } from '@/lib/i18n-utils'
+import { tStatus, tPriority } from '@/lib/i18n-utils'
 
 interface IssuePanelProps {
   projectId: string
   statuses: Status[]
-  issue?: (Issue & { tags?: Tag[] }) | null
+  issue?: Issue | null
   onClose: () => void
   hideHeaderActions?: boolean
 }
@@ -30,7 +30,6 @@ export function IssuePanel({
   const [copied, setCopied] = useState(false)
 
   const displayId = issue?.displayId ?? 'Issue'
-  const issueTags = issue?.tags ?? []
 
   // Auto-focus the panel container on mount so Escape works immediately
   useEffect(() => {
@@ -151,25 +150,6 @@ export function IssuePanel({
             </div>
           </div>
         </div>
-
-        {/* Tags Row */}
-        {issueTags.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b">
-            <span className="text-xs text-muted-foreground">
-              {t('issue.tags')}
-            </span>
-            {issueTags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant="outline"
-                className="text-xs"
-                style={{ borderColor: tag.color, color: tag.color }}
-              >
-                {tTag(t, tag.name)}
-              </Badge>
-            ))}
-          </div>
-        ) : null}
 
         {/* Title */}
         <div className="px-4 pt-4">

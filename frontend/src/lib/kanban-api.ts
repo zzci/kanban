@@ -4,11 +4,9 @@ import type {
   CreateSessionRequest,
   ExecuteSessionResponse,
   Issue,
-  IssueWithTags,
   Project,
   SessionLogsResponse,
   Status,
-  Tag,
 } from '@/types/kanban'
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -33,10 +31,6 @@ function post<T>(url: string, body: unknown) {
 
 function patch<T>(url: string, body: unknown) {
   return request<T>(url, { method: 'PATCH', body: JSON.stringify(body) })
-}
-
-function del<T>(url: string) {
-  return request<T>(url, { method: 'DELETE' })
 }
 
 export const kanbanApi = {
@@ -71,7 +65,7 @@ export const kanbanApi = {
 
   // Issues
   getIssues: (projectId: string) =>
-    get<IssueWithTags[]>(`/api/projects/${projectId}/issues`),
+    get<Issue[]>(`/api/projects/${projectId}/issues`),
   createIssue: (
     projectId: string,
     data: {
@@ -80,9 +74,9 @@ export const kanbanApi = {
       priority?: string
       useWorktree?: boolean
     },
-  ) => post<IssueWithTags>(`/api/projects/${projectId}/issues`, data),
+  ) => post<Issue>(`/api/projects/${projectId}/issues`, data),
   updateIssue: (projectId: string, id: string, data: Partial<Issue>) =>
-    patch<IssueWithTags>(`/api/projects/${projectId}/issues/${id}`, data),
+    patch<Issue>(`/api/projects/${projectId}/issues/${id}`, data),
   bulkUpdateIssues: (
     projectId: string,
     updates: Array<{
@@ -92,14 +86,7 @@ export const kanbanApi = {
   ) => patch<Issue[]>(`/api/projects/${projectId}/issues/bulk`, { updates }),
 
   getIssue: (projectId: string, issueId: string) =>
-    get<IssueWithTags>(`/api/projects/${projectId}/issues/${issueId}`),
-
-  // Tags
-  getTags: (projectId: string) => get<Tag[]>(`/api/projects/${projectId}/tags`),
-  createTag: (projectId: string, data: { name: string; color: string }) =>
-    post<Tag>(`/api/projects/${projectId}/tags`, data),
-  deleteTag: (projectId: string, tagId: string) =>
-    del<null>(`/api/projects/${projectId}/tags/${tagId}`),
+    get<Issue>(`/api/projects/${projectId}/issues/${issueId}`),
 
   // Sessions
   getSessionsByProject: (projectId: string) =>

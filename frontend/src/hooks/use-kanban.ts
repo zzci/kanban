@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CreateSessionRequest, IssueWithTags } from '@/types/kanban'
+import type { CreateSessionRequest, Issue } from '@/types/kanban'
 import { kanbanApi } from '@/lib/kanban-api'
 import { useBoardStore } from '@/stores/board-store'
 
@@ -10,7 +10,6 @@ export const queryKeys = {
   issues: (projectId: string) => ['projects', projectId, 'issues'] as const,
   issue: (projectId: string, issueId: string) =>
     ['projects', projectId, 'issues', issueId] as const,
-  tags: (projectId: string) => ['projects', projectId, 'tags'] as const,
   sessions: (projectId: string) => ['projects', projectId, 'sessions'] as const,
   sessionsByIssue: (projectId: string, issueId: string) =>
     ['projects', projectId, 'sessions', 'issue', issueId] as const,
@@ -96,14 +95,6 @@ export function useIssue(projectId: string, issueId: string) {
   })
 }
 
-export function useTags(projectId: string) {
-  return useQuery({
-    queryKey: queryKeys.tags(projectId),
-    queryFn: () => kanbanApi.getTags(projectId),
-    enabled: !!projectId,
-  })
-}
-
 export function useCreateIssue(projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -132,7 +123,7 @@ export function useBulkUpdateIssues(projectId: string) {
       await queryClient.cancelQueries({
         queryKey: queryKeys.issues(projectId),
       })
-      const previous = queryClient.getQueryData<IssueWithTags[]>(
+      const previous = queryClient.getQueryData<Issue[]>(
         queryKeys.issues(projectId),
       )
 
@@ -161,27 +152,6 @@ export function useBulkUpdateIssues(projectId: string) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.issues(projectId) })
       useBoardStore.getState().resetDragging()
-    },
-  })
-}
-
-export function useCreateTag(projectId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (data: { name: string; color: string }) =>
-      kanbanApi.createTag(projectId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags(projectId) })
-    },
-  })
-}
-
-export function useDeleteTag(projectId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (tagId: string) => kanbanApi.deleteTag(projectId, tagId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags(projectId) })
     },
   })
 }
