@@ -54,6 +54,11 @@ function ProjectCard({
               <CardTitle className="text-base group-hover:text-primary transition-colors truncate">
                 {project.name}
               </CardTitle>
+              {project.description && (
+                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                  {project.description}
+                </p>
+              )}
             </div>
             <button
               type="button"
